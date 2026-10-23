@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, validator
 
 from .qloo_client import QlooClient
 from .settings import Settings, get_settings
+from .src.auth import require_report_auth
 from .src.orchestration import AnalysisPlan, ResearchExecutionResults, XcOrchestrator
 from .src.services.presets import get_preset, list_presets
 
@@ -94,7 +95,7 @@ def presets() -> list[dict[str, Any]]:
     return list_presets()
 
 
-@app.post("/api/v1/reports/analyze")
+@app.post("/api/v1/reports/analyze", dependencies=[Depends(require_report_auth)])
 def analyze_report(
     request: AnalyzeRequest,
     qloo: QlooClient = Depends(get_qloo_client),
