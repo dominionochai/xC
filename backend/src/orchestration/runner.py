@@ -1,7 +1,7 @@
 """Gated phase runner and deterministic xC orchestration."""
 from __future__ import annotations
 from typing import Any
-from ...analytics import affinity_clash, affinity_graph, dollarized_tam, find_transition_bridge, geographic_market_split
+from ...analytics import affinity_class, affinity_graph, dollarized_tam, find_transition_bridge, geographic_market_split
 from ...services.presets import get_preset
 from .gates import gate_adversarial_review, gate_cultural_analysis, gate_input, gate_qloo_extraction, gate_report
 from .session import PHASE_ORDER, XcModelSession
@@ -18,14 +18,14 @@ class PhaseRoleRunner:
         elif phase is AnalysisPhase.CULTURAL_ANALYSIS:
             source, target = session.research.source_affinities, session.research.comparison_affinities
             graph = affinity_graph(plan.source_entity_id, plan.comparison_entity_id, source, target)
-            clash = affinity_clash(source, target)
+            clash = affinity_class(source, target)
             risk = clash["risk"]
             data = {
                 "affinity": clash,
                 "transition_bridge": find_transition_bridge(plan.source_entity_id, plan.comparison_entity_id, graph, max_hops=3),
                 "geographic_market_split": geographic_market_split(plan.regions),
                 "tam": dollarized_tam(sum(plan.regions.values()), plan.annual_spend_per_person),
-                "fanbacklash_risk": {"risk": risk, "score": clash["clash_score"] if risk != "unknown" else None, "method": "jaccard-affinity-clash-v1", "shared_entities": len(clash["shared_entities"]), "affinity_overlap": clash["jaccard_similarity"], "interpretation": "Directional affinity-based proxy; validate with audience research."},
+                "fanbacklash_risk": {"risk": risk, "score": clash["clash_score"] if risk != "unknown" else None, "method": "jaccard-affinity-class-v1", "shared_entities": len(clash["shared_entities"]), "affinity_overlap": clash["jaccard_similarity"], "interpretation": "Directional affinity-based proxy; validate with audience research."},
             }
         elif phase is AnalysisPhase.ADVERSARIAL_REVIEW:
             risk = session.output_for(AnalysisPhase.CULTURAL_ANALYSIS)["fanbacklash_risk"]["risk"]
@@ -50,7 +50,7 @@ class PhaseRoleRunner:
         return AnalysisPhaseResult(phase=phase, status="complete", data=data)
 
 class XcOrchestrator:
-    """Run five gated phases and preserve the original report fields at top level."""
+    """Run five gated phases and preserve input report fields at top level."""
     def __init__(self, runner: PhaseRoleRunner | None = None) -> None:
         self.runner = runner or PhaseRoleRunner()
     def run(self, plan: AnalysisPlan, research: ResearchExecutionResults) -> XcRunResult:
