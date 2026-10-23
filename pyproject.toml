@@ -5,9 +5,17 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "xc"
 version = "0.1.0"
-description = "Starter scaffold for xC"
+description = "xC starter package and Qloo-backed FastAPI analysis slice"
 readme = "README.md"
 requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110,<1.0",
+    "httpx>=0.27,<1.0",
+    "uvicorn>=0.27,<1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4,<9.0"]
 
 [project.scripts]
 xc = "xc.cli:main"
