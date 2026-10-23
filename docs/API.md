@@ -14,7 +14,7 @@ The current identifiers are `brand_launch`, `brand_repositioning`, and `market_e
 
 ## Analyze a report
 
-`POST /api/v1/reports/analyze` accepts JSON with `source_entity_id`, `comparison_entity_id`, `regions` (a non-empty mapping of region names to non-negative integer populations), and `annual_spend_per_person`. `entity_type` defaults to `urn:entity:brand`; `preset_id` defaults to `market_entry`. The endpoint requires `QLOO_API_KEY` and returns `503` when that credential is not configured. Upstream Qloo request failures are surfaced as `502`.
+`POST /api/v1/reports/analyze` accepts JSON with `source_entity_id`, `comparison_entity_id`, `regions` (a non-empty mapping of region names to non-negative integer populations), and `annual_spend_per_person`. `entity_type` defaults to `urn:entity:brand`; `preset_id` defaults to `market_entry`. The endpoint requires a `QLOO_API_KEY` and returns a `503` when that credential is not configured. Qloo request failures are surfaced as `502`.
 
 ```sh
 curl -X POST http://localhost:8000/api/v1/reports/analyze \
