@@ -1,16 +1,20 @@
 """FastAPI endpoints for health and Qloo-backed report analysis."""
 from __future__ import annotations
+
 import math
 from typing import Any, Iterator
+
 import httpx
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, Field, validator
+
 from .qloo_client import QlooClient
 from .settings import Settings, get_settings
 from .src.orchestration import AnalysisPlan, ResearchExecutionResults, XcOrchestrator
-from .src.services.presets import get_preset
+from .src.services.presets import get_preset, list_presets
 
 app = FastAPI(title="xC API", version="0.2.0")
+
 
 class AnalyzeRequest(BaseModel):
     source_entity_id: str = Field(..., min_length=1, max_length=512)
@@ -78,12 +82,23 @@ def _result_entity_ids(payload: dict[str, Any]) -> list[str]:
             entity_ids.append(entity_id)
     return sorted(set(entity_ids))
 
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
+
+@app.get("/api/v1/presets", tags=["presets"], summary="List built-in analysis presets")
+def presets() -> list[dict[str, Any]]:
+    """Return the supported preset catalog without requiring Qloo credentials."""
+    return list_presets()
+
+
 @app.post("/api/v1/reports/analyze")
-def analyze_report(request: AnalyzeRequest, qloo: QlooClient = Depends(get_qloo_client)) -> dict[str, object]:
+def analyze_report(
+    request: AnalyzeRequest,
+    qloo: QlooClient = Depends(get_qloo_client),
+) -> dict[str, object]:
     try:
         source_payload = qloo.get_insights(request.source_entity_id, entity_type=request.entity_type)
         target_payload = qloo.get_insights(request.comparison_entity_id, entity_type=request.entity_type)
