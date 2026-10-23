@@ -1,10 +1,27 @@
-/** Built-in analysis presets; ids match backend/src/services/presets.py. */
-export type AnalysisPreset = { id: string; name: string; description: string; risk_tolerance: "low" | "medium" };
-export const ANALYSIS_PRESETS: readonly AnalysisPreset[] = [
-  { id: "brand_launch", name: "Brand launch", description: "Assess cultural fit and market opportunity for a new brand launch.", risk_tolerance: "low" },
-  { id: "brand_repositioning", name: "Brand repositioning", description: "Evaluate audience overlap and transition paths for a repositioning.", risk_tolerance: "medium" },
-  { id: "market_entry", name: "Market entry", description: "Compare cultural affinity and regional opportunity before entering a market.", risk_tolerance: "medium" },
-];
-export function getAnalysisPreset(id: string): AnalysisPreset | undefined {
-  return ANALYSIS_PRESETS.find((preset) => preset.id === id);
-}
+export type Preset = {
+  id: string;
+  label: string;
+  acquirer: string;
+  target: string;
+};
+
+export const PRESETS = [
+  {
+    id: "porsche-aime-leon-dore",
+    label: "Porsche x Aimé Leon Dore",
+    acquirer: "Porsche",
+    target: "Aimé Leon Dore",
+  },
+  {
+    id: "coachella-jacquemus",
+    label: "Coachella x Jacquemus",
+    acquirer: "Coachella",
+    target: "Jacquemus",
+  },
+  {
+    id: "lululemon-nfl",
+    label: "Lululemon x NFL",
+    acquirer: "Lululemon",
+    target: "NFL",
+  },
+] as const satisfies readonly Preset[];
