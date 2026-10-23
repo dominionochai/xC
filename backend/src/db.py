@@ -5,8 +5,6 @@ require database dependencies to be installed. Configure ``DATABASE_URL``
 with an async driver URL (for example, ``postgresql+asyncpg://...``).
 """
 
-from __future__ import annotations
-
 import os
 import uuid
 from typing import Any
