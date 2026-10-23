@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "xc"
 version = "0.1.0"
-description = "xC starter package and Qloo-backed FastAPI analysis slice"
+description = "Command-line interface and Qloo-backed FastAPI report-analysis service"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

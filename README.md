@@ -1,6 +1,6 @@
 # xC
 
-A minimal Python project with the original `xc` starter CLI and a small Qloo-backed FastAPI report-analysis slice.
+A Python project with a command-line interface and a Qloo-backed FastAPI report-analysis service.
 
 ## Requirements and setup
 
@@ -12,7 +12,7 @@ python -m venv .venv
 python -m pip install -e ".[dev]"
 ```
 
-Runtime dependencies are also listed in `requirements.txt` for deployments that do not need the editable package or test extra.
+Runtime dependencies are also listed in `requirements.txt` for deployments that do not need the editable package or test extras.
 
 ## Run the backend
 
@@ -31,7 +31,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/reports/analyze \\
   -d '{"source_entity_id":"<SOURCE_QLOO_ENTITY_ID>","comparison_entity_id":"<COMPARISON_QLOO_ENTITY_ID>","entity_type":"urn:entity:brand","regions":{"US":1000000,"CA":250000},"annual_spend_per_person":24.50}'
 ```
 
-The response includes Jaccard affinity clash/risk, the shortest deterministic affinity bridge of up to three graph hops, regional population shares, and annual TAM in USD. Population and spend are caller-supplied assumptions, not Qloo facts. Requests have a bounded retry budget; a missing key returns HTTP 503 and upstream failures return HTTP 502.
+The response includes Jaccard affinity clash/risk, the shortest deterministic affinity bridge of up to three graph hops, regional population shares, and annual TAM in USD. Population and spend are caller-supplied assumptions, not Qloo facts. Requests have a bounded retry budget; a missing key returns HTTP 503 and remote service failures return HTTP 502.
 
 ## Tests
 
@@ -42,11 +42,11 @@ python -m unittest discover -s tests -v
 pytest
 ```
 
-## Original CLI starter
+## Command-line interface
 
 ```sh
 xc hello world
 # hello world
 xc
-# xC starter
+# xC
 ```
