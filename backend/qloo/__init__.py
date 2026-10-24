@@ -6,12 +6,23 @@ integrations remain untouched. The caller supplies credentials to QlooClient.
 
 from .client import CallBudgetExceeded, QlooClient, QlooError, QlooHTTPError, QlooResponseError
 from .normalize import is_suspect_empty, normalize_entities, normalize_results
-from .params import DEFAULT_BASE_URL, validate_endpoint, validate_params
+from .params import (
+    DEFAULT_BASE_URL,
+    ParamError,
+    build_insights_params,
+    build_search_params,
+    diagnose_params,
+    encode_params,
+    normalize_params,
+    validate_endpoint,
+    validate_params,
+)
 from .transport_urllib import TransportResponse, UrllibTransport
 
 __all__ = [
-    "CallBudgetExceeded", "DEFAULT_BASE_URL", "QlooClient", "QlooError",
+    "CallBudgetExceeded", "DEFAULT_BASE_URL", "ParamError", "QlooClient", "QlooError",
     "QlooHTTPError", "QlooResponseError", "TransportResponse", "UrllibTransport",
-    "is_suspect_empty", "normalize_entities", "normalize_results",
+    "build_insights_params", "build_search_params", "diagnose_params", "encode_params",
+    "is_suspect_empty", "normalize_entities", "normalize_params", "normalize_results",
     "validate_endpoint", "validate_params",
 ]
