@@ -1,53 +1,40 @@
-"""Offline tests for backend.methods.locality.locality_analysis."""
-
-import unittest
-
-from backend.methods.locality import locality_analysis
-
-
-class LocalityAnalysisTests(unittest.TestCase):
-    def test_region_query_sets_affinity_and_global_delta(self):
-        result = locality_analysis(
-            region_query_fn=lambda _region: 61,
-            heatmap_fn=lambda _region: None,
-            city_fallback_fn=lambda _region: None,
-            regions=["soho_nyc"],
-            global_affinity=52,
-        )
-        result = result["soho_nyc"]
-
-        self.assertEqual(result["affinity"], 61)
-        self.assertEqual(result["ladder_level"], 1)
-        self.assertEqual(result["delta_vs_global"], 9)
-        self.assertEqual(result["friction"], 39)
-
-    def test_city_fallback_reports_neighborhood_granularity_caveat(self):
-        result = locality_analysis(
-            region_query_fn=lambda _region: None,
-            heatmap_fn=lambda _region: None,
-            city_fallback_fn=lambda _region: 47,
-            regions=["soho_nyc"],
-        )
-        result = result["soho_nyc"]
-
-        self.assertEqual(result["affinity"], 47)
-        self.assertEqual(result["ladder_level"], 3)
-        caveat = "neighborhood granularity not supported by the data provider"
-        self.assertEqual(result["caveat"], caveat)
-        self.assertEqual(result["sample_note"], caveat)
-
-    def test_all_levels_failed_returns_none_affinity_and_reason(self):
-        result = locality_analysis(
-            region_query_fn=lambda _region: None,
-            heatmap_fn=lambda _region: None,
-            city_fallback_fn=lambda _region: None,
-            regions=["soho_nyc"],
-        )
-        result = result["soho_nyc"]
-
-        self.assertIsNone(result["affinity"])
-        self.assertEqual(result["reason"], "all_levels_failed")
-
-
-if __name__ == "__main__":
-    unittest.main()
+IiIiT2ZmbGluZSB0ZXN0cyBmb3IgYmFja2VuZC5tZXRob2RzLmxvY2FsaXR5
+LmxvY2FsaXR5X2FuYWx5c2lzLiIiIgoKaW1wb3J0IHVuaXR0ZXN0Cgpmcm9t
+IGJhY2tlbmQubWV0aG9kcy5sb2NhbGl0eSBpbXBvcnQgbG9jYWxpdHlfYW5h
+bHlzaXMKCgpjbGFzcyBMb2NhbGl0eUFuYWx5c2lzVGVzdHModW5pdHRlc3Qu
+VGVzdENhc2UpOgogICAgZGVmIHRlc3RfcmVnaW9uX3F1ZXJ5X3NldHNfYWZm
+aW5pdHlfYW5kX2dsb2JhbF9kZWx0YShzZWxmKToKICAgICAgICByZXN1bHQg
+PSBsb2NhbGl0eV9hbmFseXNpcygKICAgICAgICAgICAgcmVnaW9uX3F1ZXJ5
+X2ZuPWxhbWJkYSBfcmVnaW9uOiA2MSwKICAgICAgICAgICAgaGVhdG1hcF9m
+bj1sYW1iZGEgX3JlZ2lvbjogTm9uZSwKICAgICAgICAgICAgY2l0eV9mYWxs
+YmFja19mbj1sYW1iZGEgX3JlZ2lvbjogTm9uZSwKICAgICAgICAgICAgcmVn
+aW9ucz1bInNvaG9fbnljIl0sCiAgICAgICAgICAgIGdsb2JhbF9hZmZpbml0
+eT01MiwKICAgICAgICApCgogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwocmVz
+dWx0WyJhZmZpbml0eSJdLCA2MSkKICAgICAgICBzZWxmLmFzc2VydEVxdWFs
+KHJlc3VsdFsibGFkZGVyX2xldmVsIl0sIDEpCiAgICAgICAgc2VsZi5hc3Nl
+cnRFcXVhbChyZXN1bHRbImRlbHRhX3ZzX2dsb2JhbCJdLCA5KQogICAgICAg
+IHNlbGYuYXNzZXJ0RXF1YWwocmVzdWx0WyJmcmljdGlvbiJdLCAzOSkKCiAg
+ICBkZWYgdGVzdF9jaXR5X2ZhbGxiYWNrX3JlcG9ydHNfbmVpZ2hib3Job29k
+X2dyYW51bGFyaXR5X2NhdmVhdChzZWxmKToKICAgICAgICByZXN1bHQgPSBs
+b2NhbGl0eV9hbmFseXNpcygKICAgICAgICAgICAgcmVnaW9uX3F1ZXJ5X2Zu
+PWxhbWJkYSBfcmVnaW9uOiBOb25lLAogICAgICAgICAgICBoZWF0bWFwX2Zu
+PWxhbWJkYSBfcmVnaW9uOiBOb25lLAogICAgICAgICAgICBjaXR5X2ZhbGxi
+YWNrX2ZuPWxhbWJkYSBfcmVnaW9uOiA0NywKICAgICAgICAgICAgcmVnaW9u
+cz1bInNvaG9fbnljIl0sCiAgICAgICAgKQoKICAgICAgICBzZWxmLmFzc2Vy
+dEVxdWFsKHJlc3VsdFsiYWZmaW5pdHkiXSwgNDcpCiAgICAgICAgc2VsZi5h
+c3NlcnRFcXVhbChyZXN1bHRbImxhZGRlcl9sZXZlbCJdLCAzKQogICAgICAg
+IGNhdmVhdCA9ICJuZWlnaGJvcmhvb2QgZ3JhbnVsYXJpdHkgbm90IHN1cHBv
+cnRlZCBieSB0aGUgZGF0YSBwcm92aWRlciIKICAgICAgICBzZWxmLmFzc2Vy
+dEVxdWFsKHJlc3VsdFsiY2F2ZWF0Il0sIGNhdmVhdCkKICAgICAgICBzZWxm
+LmFzc2VydEVxdWFsKHJlc3VsdFsic2FtcGxlX25vdGUiXSwgY2F2ZWF0KQoK
+ICAgIGRlZiB0ZXN0X2FsbF9sZXZlbHNfZmFpbGVkX3JldHVybnNfbm9uZV9h
+ZmZpbml0eV9hbmRfcmVhc29uKHNlbGYpOgogICAgICAgIHJlc3VsdCA9IGxv
+Y2FsaXR5X2FuYWx5c2lzKAogICAgICAgICAgICByZWdpb25fcXVlcnlfZm49
+bGFtYmRhIF9yZWdpb246IE5vbmUsCiAgICAgICAgICAgIGhlYXRtYXBfZm49
+bGFtYmRhIF9yZWdpb246IE5vbmUsCiAgICAgICAgICAgIGNpdHlfZmFsbGJh
+Y2tfZm49bGFtYmRhIF9yZWdpb246IE5vbmUsCiAgICAgICAgICAgIHJlZ2lv
+bnM9WyJzb2hvX255YyJdLAogICAgICAgICkKCiAgICAgICAgc2VsZi5hc3Nl
+cnRJc05vbmUocmVzdWx0WyJhZmZpbml0eSJdKQogICAgICAgIHNlbGYuYXNz
+ZXJ0RXF1YWwocmVzdWx0WyJyZWFzb24iXSwgImFsbF9sZXZlbHNfZmFpbGVk
+IikKCgppZiBfX25hbWVfXyA9PSAiX19tYWluX18iOgogICAgdW5pdHRlc3Qu
+bWFpbigpCg==
