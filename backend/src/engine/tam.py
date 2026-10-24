@@ -1,103 +1,87 @@
-"""Source-aware, assumption-labelled M8 TAM expansion arithmetic."""
-
+"""Total-addressable-market estimates with explicit assumption provenance."""
 import json
-import math
-from pathlib import Path
+import os
 
-try:
-    from backend.src.engine.budget import Budget
-except ImportError:  # budget.py is provided by the integrating application.
-    class Budget:
-        """Import-compatible fallback for standalone use."""
-        def __init__(self, max_calls=40): self.max_calls = max_calls
-
-FIELDS = ("pop", "penetration", "spend", "affinity", "ip_loss_base", "ip_loss_low", "ip_loss_high")
-CENTRAL = ("pop", "penetration", "spend", "affinity", "ip_loss_base")
+FACTORS = ("pop", "penetration", "spend", "affinity", "ip_loss_base")
 
 
-def _number(x):
-    if isinstance(x, bool): return None
-    try:
-        n = float(x)
-        return n if math.isfinite(n) else None
+def _source_ok(region, key):
+    sources = region.get("sources") or {}
+    source = sources.get(key) if isinstance(sources, dict) else None
+    return isinstance(source, dict) and "year" in source and "note" in source and ("url" in source)
+
+
+def _load_default():
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "regions.json"))
+    with open(path, "r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def _value(region, key):
+    value = region.get(key)
+    try: return float(value) if value is not None else None
     except (TypeError, ValueError): return None
 
 
-def _regions(data):
-    if data is None:
-        path = Path(__file__).resolve().parents[3] / "backend" / "data" / "regions.json"
-        try:
-            with path.open(encoding="utf-8") as stream: data = json.load(stream)
-        except (OSError, ValueError): return []
-    if isinstance(data, dict): data = data.get("regions", data)
-    if isinstance(data, dict):
-        return [dict(value, region=value.get("region", key)) for key, value in data.items() if isinstance(value, dict)]
-    return data if isinstance(data, list) else []
-
-
-def _source_ok(entry):
-    if not isinstance(entry, dict) or entry.get("year") is None: return False, False
-    url, note = entry.get("url"), entry.get("note", "")
-    if isinstance(url, str) and url.strip(): return True, False
-    if isinstance(note, str) and note.lower().startswith("est:"): return True, True
-    return False, False
-
-
-def _calc(v, field=None, multiplier=1.0):
-    x = dict(v)
-    if field == "ip_loss_base": x[field] = max(0.0, min(100.0, x[field] * multiplier))
-    elif field is not None: x[field] *= multiplier
-    return x["pop"] * x["penetration"] * x["spend"] * (x["affinity"] / 100.0) * (1.0-x["ip_loss_base"]/100.0)
+def _calc(region, overrides=None):
+    overrides = overrides or {}
+    vals = {}
+    for key in FACTORS:
+        value = overrides.get(key, _value(region, key))
+        if value is not None: vals[key] = float(value)
+    if any(key not in vals for key in FACTORS): return None
+    pop, penetration, spend, affinity, loss = (vals[k] for k in FACTORS)
+    reach = pop * penetration
+    expansion = reach * spend * (affinity / 100.0) * (1.0 - loss / 100.0)
+    return {"reach": reach, "expansion": expansion}
 
 
 def run(qloo, budget, regions_data=None):
-    """Return regional reach, expansion, tornado sensitivity, and provenance.
-
-    M8 is computed from the supplied source ledger; it intentionally has no
-    Qloo dependency. The ``qloo`` and ``budget`` arguments preserve the engine API.
-    """
-    warnings, rows, valid_assumptions = [], [], 0
-    for entry in _regions(regions_data):
-        if not isinstance(entry, dict): continue
-        name = str(entry.get("region", entry.get("name", "")))
-        sources = entry.get("sources", {}) if isinstance(entry.get("sources", {}), dict) else {}
-        values, provenance = {}, {}
-        for field in FIELDS:
-            value = _number(entry.get(field))
-            ok, estimated = _source_ok(sources.get(field))
-            if not ok or value is None:
-                values[field] = None
-                warnings.append("missing_source:%s:%s" % (field, name) if not ok else "missing_value:%s:%s" % (field, name))
-                continue
-            values[field] = value
-            valid_assumptions += 1
-            provenance[field] = dict(sources[field])
-            if estimated: warnings.append("estimated_assumption:%s:%s" % (field, name))
-        reach = values["pop"] * values["penetration"] if values["pop"] is not None and values["penetration"] is not None else None
-        baseline = values["pop"] * values["penetration"] * values["spend"] if all(values[k] is not None for k in ("pop", "penetration", "spend")) else None
-        complete = all(values[k] is not None for k in FIELDS)
-        expansion = _calc(values) if complete else None
-        low = high = None
-        if complete:
-            low_values, high_values = dict(values), dict(values)
-            low_values["ip_loss_base"] = values["ip_loss_high"]
-            high_values["ip_loss_base"] = values["ip_loss_low"]
-            low, high = _calc(low_values), _calc(high_values)
-        rows.append({"region": name, "reach": reach, "baseline": baseline,
-                     "expansion": expansion, "expansion_low": low, "expansion_high": high,
-                     "partial": not complete, "assumptions": values, "sources": provenance})
-    complete = [r for r in rows if r["expansion"] is not None]
-    if valid_assumptions == 0:
-        return {"tam": None, "reason": "all_assumptions_null", "regions": rows,
-                "tam_partial": True, "warnings": warnings, "tornado": {}, "provenance": "M8 source-ledger arithmetic"}
-    total = sum(r["expansion"] for r in complete) if complete else None
-    base = sum(r["baseline"] for r in rows if r["baseline"] is not None) or None
+    warnings, evidence, provenance = [], [], []
+    if regions_data is None:
+        try: regions_data = _load_default()
+        except Exception as exc:
+            return {"tam": None, "reason": "all_assumptions_null", "warnings": ["regions_data_unavailable:" + type(exc).__name__, "tam_partial"], "evidence": [], "provenance": []}
+    if isinstance(regions_data, dict): regions = regions_data.get("regions", [])
+    elif isinstance(regions_data, list): regions = regions_data
+    else: regions = []
+    region_results = []
     tornado = {}
-    for field in CENTRAL:
-        vals = [r["assumptions"] for r in complete]
-        if vals:
-            tornado[field] = {"low": sum(_calc(v, field, 0.70) for v in vals),
-                              "high": sum(_calc(v, field, 1.30) for v in vals)}
-    return {"tam": total, "reason": None if total is not None else "no_complete_regions",
-            "baseline": base, "regions": rows, "tam_partial": len(complete) != len(rows) or bool(warnings),
-            "warnings": warnings, "tornado": tornado, "provenance": "M8 source-ledger arithmetic"}
+    partial = False
+    total = 0.0; any_total = False
+    for region in regions:
+        if not isinstance(region, dict):
+            partial = True; warnings.append("invalid_region_record"); continue
+        name = region.get("region")
+        missing = []
+        for key in FACTORS:
+            if _value(region, key) is None:
+                missing.append(key)
+            elif not _source_ok(region, key):
+                missing.append(key + "_source")
+        if missing:
+            partial = True
+            warnings.extend(["missing_assumption:%s:%s" % (name, key) for key in missing])
+            region_results.append({"region": name, "reach": None, "expansion": None, "missing": missing, "sources": region.get("sources", {})})
+            continue
+        calc = _calc(region)
+        if calc is None:
+            partial = True; continue
+        any_total = True; total += calc["expansion"]
+        item = {"region": name, "reach": calc["reach"], "expansion": calc["expansion"], "assumptions": {key: _value(region, key) for key in FACTORS}, "sources": region.get("sources", {})}
+        region_results.append(item)
+        for factor in FACTORS:
+            base = _value(region, factor)
+            low_value = max(0.0, base * .70)
+            high_value = base * 1.30
+            low_calc = _calc(region, {factor: low_value})
+            high_calc = _calc(region, {factor: high_value})
+            key = str(name) + ":" + factor
+            tornado[key] = {"base": calc["expansion"], "minus_30_pct": low_calc["expansion"] if low_calc else None, "plus_30_pct": high_calc["expansion"] if high_calc else None}
+            source = region["sources"][factor]
+            evidence.append({"source": source, "assumption": factor, "region": name, "value": base})
+            provenance.append({"region": name, "assumption": factor, "source": source})
+    if not any_total:
+        return {"tam": None, "reason": "all_assumptions_null", "regions": region_results, "tornado": tornado, "warnings": warnings + (["tam_partial"] if partial else []), "evidence": evidence, "provenance": provenance}
+    if partial: warnings.append("tam_partial")
+    return {"tam": total, "regions": region_results, "tornado": tornado, "warnings": warnings, "evidence": evidence, "provenance": provenance}
