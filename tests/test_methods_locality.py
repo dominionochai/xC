@@ -5,7 +5,6 @@ import unittest
 
 from backend.methods.locality import locality_analysis
 
-
 class LocalityAnalysisTests(unittest.TestCase):
     def test_region_query_sets_affinity_and_global_delta(self):
         result = locality_analysis(
