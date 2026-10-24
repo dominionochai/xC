@@ -1,15 +1,23 @@
 """Paced, bounded, retrying Qloo JSON client with an in-memory response cache."""
 from __future__ import annotations
+
 import copy
 import json
 import math
 import time
 from collections.abc import Mapping
 from typing import Any, Callable, Protocol
+
+from .normalize import is_empty_results
 from .params import DEFAULT_BASE_URL, validate_base_url, validate_endpoint, validate_params
 from .transport_urllib import TransportResponse, UrllibTransport
 
 _RETRYABLE_STATUS = {429, 500, 502, 503, 504}
+KNOWN_PARAMS = {'query','entity_type','entity_types','type','take','filter.type','filter.results.entities','filter.exclude.entities','filter.location.query','signal.entities','signal.entity','signal.location.query','feature.explainability','bias.trends','urn','limit','offset'}
+
+
+def diagnose_params(requested: Mapping[str, object]) -> list[str]:
+    return sorted(str(name) for name in requested if str(name) not in KNOWN_PARAMS)
 
 
 class QlooError(RuntimeError):
@@ -54,7 +62,7 @@ class QlooClient:
         if isinstance(call_budget, bool) or not isinstance(call_budget, int) or call_budget < 1:
             raise ValueError("call_budget must be a positive integer")
         for name, value, allow_zero in (("timeout", timeout, False),
-                ("pacing_seconds", pacing_seconds, True), ("cache_ttl", cache_ttl, True)):
+                                        ("pacing_seconds", pacing_seconds, True), ("cache_ttl", cache_ttl, True)):
             if isinstance(value, bool) or not isinstance(value, (int, float)):
                 raise ValueError(f"{name} must be a finite number")
             if not math.isfinite(value) or value < 0 or (not allow_zero and value == 0):
@@ -90,7 +98,8 @@ class QlooClient:
         now = self._clock()
         cached = self._cache.get(cache_key)
         if cached is not None and cached[0] > now:
-            self._call_log.append({"path": route, "cached": True, "status": 200, "attempt": 0})
+            self._call_log.append({"path": route, "cached": True, "status": 200, "attempt": 0,
+                                   "suspect_empty": False})
             return copy.deepcopy(cached[1])
         if cached is not None:
             del self._cache[cache_key]
@@ -99,7 +108,8 @@ class QlooClient:
         for attempt in range(self._retries + 1):
             if self._used >= self._budget:
                 self._call_log.append({"path": route, "cached": False, "status": None,
-                    "attempt": attempt + 1, "error": "call_budget_exhausted"})
+                                       "attempt": attempt + 1, "error": "call_budget_exhausted",
+                                       "suspect_empty": False})
                 raise CallBudgetExceeded("Qloo network call budget exhausted")
             started = self._clock()
             if self._last_started is not None:
@@ -111,13 +121,13 @@ class QlooClient:
             self._used += 1
             try:
                 response = self._transport.get(url, params=query,
-                    headers={"X-Api-Key": self._api_key, "Accept": "application/json"},
-                    timeout=self._timeout)
+                                               headers={"X-Api-Key": self._api_key, "Accept": "application/json"},
+                                               timeout=self._timeout)
             except (OSError, TimeoutError):
                 elapsed = max(0.0, self._clock() - started)
                 self._call_log.append({"path": route, "cached": False, "status": None,
-                    "attempt": attempt + 1, "elapsed_seconds": round(elapsed, 6),
-                    "error": "transport_error"})
+                                       "attempt": attempt + 1, "elapsed_seconds": round(elapsed, 6),
+                                       "error": "transport_error", "suspect_empty": False})
                 if attempt < self._retries:
                     self._sleep(min(0.25 * (2 ** attempt), 3.0))
                     continue
@@ -126,8 +136,8 @@ class QlooClient:
             elapsed = max(0.0, self._clock() - started)
             retry_after = _retry_after(response.headers)
             row: dict[str, Any] = {"path": route, "cached": False,
-                "status": response.status, "attempt": attempt + 1,
-                "elapsed_seconds": round(elapsed, 6)}
+                                    "status": response.status, "attempt": attempt + 1,
+                                    "elapsed_seconds": round(elapsed, 6), "suspect_empty": False}
             if retry_after is not None:
                 row["retry_after_seconds"] = retry_after
             self._call_log.append(row)
@@ -144,6 +154,9 @@ class QlooClient:
             if not isinstance(payload, Mapping):
                 raise QlooResponseError("Qloo JSON response must be an object")
             result = dict(payload)
+            if response.status == 200 and is_empty_results(result):
+                row["suspect_empty"] = True
+                row["possibly_ignored"] = diagnose_params(query)
             if self._cache_ttl > 0:
                 self._cache[cache_key] = (self._clock() + self._cache_ttl, copy.deepcopy(result))
             return result
