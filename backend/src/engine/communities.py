@@ -1,121 +1,115 @@
-"""Group Qloo entities into communities and derive co-weights."""
-from __future__ import annotations
-
-import inspect
-import math
-from typing import Any, Mapping
+"""Contrast-tag community construction with bounded Qloo access."""
+from collections import defaultdict
 
 
-def _budget_check(budget: Any) -> None:
-    """Check the operation budget immediately before a Qloo method call."""
-    if budget is None:
-        return
-    check = getattr(budget, "check", None)
-    result = check() if callable(check) else budget() if callable(budget) else budget
-    if result is False:
-        raise RuntimeError("Qloo call budget exhausted")
+def _get(obj, key, default=None):
+    return obj.get(key, default) if isinstance(obj, dict) else getattr(obj, key, default)
 
 
-def _entities(value: Any) -> list[dict[str, Any]]:
-    if isinstance(value, Mapping):
-        value = value.get("entities", value.get("results", value.get("items", [])))
-    if not isinstance(value, (list, tuple)):
-        return []
-    return [dict(item) for item in value if isinstance(item, Mapping)]
+def _tags(value):
+    found = []
+    if isinstance(value, dict):
+        for key in ("tags", "contrast_tags", "items", "axes"):
+            if key in value:
+                found.extend(_tags(value[key]))
+        if not found and value.get("tag") is not None:
+            found.append(value["tag"])
+    elif isinstance(value, (list, tuple, set)):
+        for item in value:
+            found.extend(_tags(item))
+    elif value is not None:
+        found.append(value)
+    out = []
+    seen = set()
+    for item in found:
+        if isinstance(item, dict):
+            item = item.get("tag") or item.get("name") or item.get("id")
+        if item is not None and str(item) not in seen:
+            seen.add(str(item)); out.append(str(item))
+    return out
 
 
-def _score(entity: Mapping[str, Any]) -> float | None:
-    raw = entity.get("weight", entity.get("score", entity.get("affinity")))
-    try:
-        value = float(raw) if raw is not None else None
-    except (TypeError, ValueError, OverflowError):
-        return None
-    return value if value is not None and math.isfinite(value) and value >= 0 else None
-
-
-def _key(entity: Mapping[str, Any]) -> str:
-    for field in ("community", "category", "type", "genre"):
-        value = entity.get(field)
-        if isinstance(value, (list, tuple)):
-            value = value[0] if value else None
-        if value:
-            return str(value)
-    tags = entity.get("tags")
-    if isinstance(tags, (list, tuple)) and tags:
-        first = tags[0]
-        return str(first.get("name", first.get("id", "ungrouped"))
-                   if isinstance(first, Mapping) else first)
-    return "ungrouped"
-
-
-def _co_weight(group: list[dict[str, Any]]) -> tuple[dict[str, float], bool]:
-    raw: list[float | None] = [_score(entity) for entity in group]
-    total = sum(value for value in raw if value is not None)
-    fallback = total <= 0
-    if fallback:
-        value = 1.0 / len(group) if group else 0.0
-        return {str(item.get("id", item.get("entity_id", item.get("name", index)))): value
-                for index, item in enumerate(group)}, True
-    return {str(item.get("id", item.get("entity_id", item.get("name", index)))):
-            (raw[index] / total if raw[index] is not None else 0.0)
-            for index, item in enumerate(group)}, False
-
-
-def communities(qloo: Any, entities: Any = None, *, budget: Any = None) -> dict[str, Any]:
-    """Group input entities and compute per-community normalized co-weights.
-
-    Qloo grouping data is preferred when available; if unavailable or empty,
-    entities are grouped locally by community/category/type/genre/tag. If no
-    usable weights exist in a group, members receive equal co-weights.
-    """
-    warnings: list[str] = []
-    provenance: list[dict[str, Any]] = []
-    evidence: list[dict[str, Any]] = []
-    payload = None
-    method = next((getattr(qloo, name, None) for name in ("get_communities", "group_entities")
-                   if callable(getattr(qloo, name, None))), None)
-    if method is not None:
+def run(qloo, budget, contrast_axes, max_communities=5, min_community_share=.05):
+    warnings, evidence, provenance = [], [], []
+    exhausted = False
+    def call(method, *args):
+        nonlocal exhausted
+        if _get(budget, "max_calls", 0) <= getattr(qloo, "call_count", 0):
+            exhausted = True
+            return None
         try:
-            _budget_check(budget)
-            try:
-                params = inspect.signature(method).parameters
-            except (TypeError, ValueError):
-                params = {"entities": None}
-            payload = method(entities) if params else method()
-            provenance.append({"source": "qloo", "method": getattr(method, "__name__", "get_communities")})
+            result = getattr(qloo, method)(*args)
+            evidence.append({"source": "qloo", "method": method, "arguments": list(args), "result": result})
+            provenance.append({"source": "qloo", "method": method})
+            return result
         except Exception as exc:
-            warnings.append("qloo_communities_failed: " + type(exc).__name__)
-    elif entities is None:
-        warnings.append("qloo_communities_method_unavailable")
-    grouped: dict[str, list[dict[str, Any]]] = {}
-    if isinstance(payload, Mapping):
-        raw_groups = payload.get("communities", payload.get("groups"))
-        if isinstance(raw_groups, Mapping):
-            for key, members in raw_groups.items():
-                grouped[str(key)] = _entities(members)
-        elif isinstance(raw_groups, (list, tuple)):
-            for index, item in enumerate(raw_groups):
-                if isinstance(item, Mapping):
-                    key = str(item.get("id", item.get("name", f"community_{index + 1}")))
-                    grouped[key] = _entities(item.get("entities", item.get("members", [])))
-    if not grouped:
-        for entity in _entities(entities if entities is not None else payload):
-            grouped.setdefault(_key(entity), []).append(entity)
-        if grouped:
-            provenance.append({"source": "local", "method": "attribute_grouping"})
-    output: list[dict[str, Any]] = []
-    for key in sorted(grouped):
-        members = grouped[key]
-        co_weights, used_fallback = _co_weight(members)
-        if used_fallback:
-            warnings.append(f"equal_weight_fallback:{key}")
-        row = {"id": key, "entities": members, "co_weights": co_weights,
-               "weight_sum": sum(co_weights.values()), "weight_fallback": used_fallback}
-        output.append(row)
-        evidence.append({"kind": "community", "id": key,
-                         "entity_count": len(members), "co_weights": co_weights,
-                         "weight_fallback": used_fallback})
-    if not output:
-        warnings.append("no_communities")
-    return {"communities": output, "provenance": provenance,
-            "evidence": evidence, "warnings": warnings}
+            warnings.append("qloo_" + method + "_failed:" + type(exc).__name__)
+            return None
+    tags = _tags(contrast_axes)
+    if not tags:
+        return {"communities": [], "reason": "no_contrast_tags", "warnings": warnings, "evidence": evidence, "provenance": provenance}
+    categories = defaultdict(list)
+    for tag in tags:
+        category = call("category", tag)
+        if exhausted: break
+        if category is not None and str(category).strip():
+            categories[str(category)].append(tag)
+    groups = [list(v) for _, v in sorted(categories.items()) if v]
+    groups = [g for g in groups if len(g) < len(tags)]
+    if not (2 <= len(groups) <= max_communities):
+        groups = [[tag] for tag in tags]
+        weights = {}
+        for i, a in enumerate(tags):
+            for b in tags[i + 1:]:
+                value = call("co_weight", a, b)
+                if exhausted: break
+                try:
+                    if isinstance(value, dict): value = value.get("weight", value.get("score"))
+                    weights[(a, b)] = float(value) if value is not None else 0.0
+                except (TypeError, ValueError): weights[(a, b)] = 0.0
+            if exhausted: break
+        # Greedily merge the strongest connected pair until the requested cap.
+        while len(groups) > max(1, max_communities):
+            candidates = []
+            for i, left in enumerate(groups):
+                for j in range(i + 1, len(groups)):
+                    right = groups[j]
+                    vals = [weights.get((a, b), weights.get((b, a), 0.0)) for a in left for b in right]
+                    candidates.append((max(vals) if vals else 0.0, i, j))
+            if not candidates: break
+            strength, i, j = max(candidates, key=lambda x: (x[0], -x[1], -x[2]))
+            if strength <= 0: break
+            groups[i] = groups[i] + groups[j]
+            del groups[j]
+        if len(groups) > max_communities:
+            groups = groups[:max_communities]
+            for tag in tags:
+                if not any(tag in g for g in groups):
+                    groups[-1].append(tag)
+    # Fold any leftover tags into their strongest available group.
+    present = {t for group in groups for t in group}
+    for tag in tags:
+        if tag in present: continue
+        if not groups: groups = [[tag]]; continue
+        choices = []
+        for i, group in enumerate(groups):
+            vals = [weights.get((tag, t), weights.get((t, tag), 0.0)) for t in group] if 'weights' in locals() else []
+            choices.append((max(vals) if vals else 0.0, i))
+        groups[max(choices)[1]].append(tag)
+    # Shares are tag-count shares; small groups fold to the nearest larger group.
+    total = max(1, len(tags))
+    shares = [len(g) / total for g in groups]
+    for i in sorted(range(len(groups)), key=lambda x: shares[x]):
+        if i >= len(groups) or shares[i] >= min_community_share or len(groups) <= 1: continue
+        choices = []
+        for j, group in enumerate(groups):
+            if i == j or shares[j] < shares[i]: continue
+            vals = [weights.get((a, b), weights.get((b, a), 0.0)) for a in groups[i] for b in group] if 'weights' in locals() else []
+            choices.append((max(vals) if vals else 0.0, shares[j], j))
+        j = max(choices)[2] if choices else max((j for j in range(len(groups)) if j != i), key=lambda j: shares[j], default=None)
+        if j is not None:
+            groups[j].extend(groups[i]); groups[i] = []; shares[j] += shares[i]; shares[i] = 0
+    result = [{"id": "community_%d" % (i + 1), "tags": group, "share": len(group) / total} for i, group in enumerate(groups) if group]
+    if exhausted: warnings.append("budget_exhausted:communities")
+    if not result: return {"communities": [], "reason": "no_contrast_tags", "warnings": warnings, "evidence": evidence, "provenance": provenance}
+    return {"communities": result, "warnings": warnings, "evidence": evidence, "provenance": provenance}
