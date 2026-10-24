@@ -1,9 +1,97 @@
-{
-  "regions": [
-    {"region":"soho_nyc","name":"SoHo, New York","pop":22000,"penetration":0.09,"spend":450,"affinity":64,"ip_loss_base":18,"ip_loss_low":12,"ip_loss_high":24,"sources":{"pop":{"url":null,"year":2026,"note":"est: neighborhood resident estimate; validate with census geography 2026"},"penetration":{"url":null,"year":2026,"note":"est: reachable share assumption pending local survey 2026"},"spend":{"url":null,"year":2026,"note":"est: annual per-person category spend assumption 2026"},"affinity":{"url":null,"year":2026,"note":"est: M7 regional affinity placeholder pending provider measurement 2026"},"ip_loss_base":{"url":null,"year":2026,"note":"est: M5 mean IP-loss assumption 2026"},"ip_loss_low":{"url":null,"year":2026,"note":"est: M5 p95 IP-loss bound assumption 2026"},"ip_loss_high":{"url":null,"year":2026,"note":"est: M5 p5 IP-loss bound assumption 2026"}}},
-    {"region":"shibuya_tokyo","name":"Shibuya, Tokyo","pop":23000,"penetration":0.08,"spend":380,"affinity":57,"ip_loss_base":20,"ip_loss_low":14,"ip_loss_high":27,"sources":{"pop":{"url":null,"year":2026,"note":"est: neighborhood resident estimate; validate with ward geography 2026"},"penetration":{"url":null,"year":2026,"note":"est: reachable share assumption pending local survey 2026"},"spend":{"url":null,"year":2026,"note":"est: annual per-person category spend assumption 2026"},"affinity":{"url":null,"year":2026,"note":"est: M7 regional affinity placeholder pending provider measurement 2026"},"ip_loss_base":{"url":null,"year":2026,"note":"est: M5 mean IP-loss assumption 2026"},"ip_loss_low":{"url":null,"year":2026,"note":"est: M5 p95 IP-loss bound assumption 2026"},"ip_loss_high":{"url":null,"year":2026,"note":"est: M5 p5 IP-loss bound assumption 2026"}}},
-    {"region":"mayfair_london","name":"Mayfair, London","pop":18000,"penetration":0.10,"spend":520,"affinity":61,"ip_loss_base":16,"ip_loss_low":10,"ip_loss_high":22,"sources":{"pop":{"url":null,"year":2026,"note":"est: neighborhood resident estimate; validate with census geography 2026"},"penetration":{"url":null,"year":2026,"note":"est: reachable share assumption pending local survey 2026"},"spend":{"url":null,"year":2026,"note":"est: annual per-person category spend assumption 2026"},"affinity":{"url":null,"year":2026,"note":"est: M7 regional affinity placeholder pending provider measurement 2026"},"ip_loss_base":{"url":null,"year":2026,"note":"est: M5 mean IP-loss assumption 2026"},"ip_loss_low":{"url":null,"year":2026,"note":"est: M5 p95 IP-loss bound assumption 2026"},"ip_loss_high":{"url":null,"year":2026,"note":"est: M5 p5 IP-loss bound assumption 2026"}}},
-    {"region":"milan_centro","name":"Milan Centro","pop":96000,"penetration":0.07,"spend":340,"affinity":52,"ip_loss_base":23,"ip_loss_low":16,"ip_loss_high":30,"sources":{"pop":{"url":null,"year":2026,"note":"est: central-district resident estimate; validate with municipal geography 2026"},"penetration":{"url":null,"year":2026,"note":"est: reachable share assumption pending local survey 2026"},"spend":{"url":null,"year":2026,"note":"est: annual per-person category spend assumption 2026"},"affinity":{"url":null,"year":2026,"note":"est: M7 regional affinity placeholder pending provider measurement 2026"},"ip_loss_base":{"url":null,"year":2026,"note":"est: M5 mean IP-loss assumption 2026"},"ip_loss_low":{"url":null,"year":2026,"note":"est: M5 p95 IP-loss bound assumption 2026"},"ip_loss_high":{"url":null,"year":2026,"note":"est: M5 p5 IP-loss bound assumption 2026"}}},
-    {"region":"lagos_ikoyi","name":"Ikoyi, Lagos","pop":50000,"penetration":0.06,"spend":160,"affinity":46,"ip_loss_base":31,"ip_loss_low":22,"ip_loss_high":40,"sources":{"pop":{"url":null,"year":2026,"note":"est: neighborhood resident estimate; validate with census geography 2026"},"penetration":{"url":null,"year":2026,"note":"est: reachable share assumption pending local survey 2026"},"spend":{"url":null,"year":2026,"note":"est: annual per-person category spend assumption 2026"},"affinity":{"url":null,"year":2026,"note":"est: M7 regional affinity placeholder pending provider measurement 2026"},"ip_loss_base":{"url":null,"year":2026,"note":"est: M5 mean IP-loss assumption 2026"},"ip_loss_low":{"url":null,"year":2026,"note":"est: M5 p95 IP-loss bound assumption 2026"},"ip_loss_high":{"url":null,"year":2026,"note":"est: M5 p5 IP-loss bound assumption 2026"}}}
-  ]
-}
+[
+  {
+    "region": "soho_nyc",
+    "pop": 23000,
+    "penetration": 0.18,
+    "spend": 350,
+    "affinity": 0.78,
+    "ip_loss_base": 0.12,
+    "ip_loss_low": 0.06,
+    "ip_loss_high": 0.22,
+    "sources": {
+      "pop": {"url": null, "year": 2026, "note": "est: rounded resident population for a compact Soho neighborhood catchment; illustrative, not an official boundary count"},
+      "penetration": {"url": null, "year": 2026, "note": "est: assumed 18% addressable-category adoption for an urban retail catchment"},
+      "spend": {"url": null, "year": 2026, "note": "est: assumed monthly discretionary category spend in USD per active consumer"},
+      "affinity": {"url": null, "year": 2026, "note": "est: proxy affinity score on a 0-to-1 scale based on assumed urban retail fit"},
+      "ip_loss_base": {"url": null, "year": 2026, "note": "est: assumed baseline share of addressable activity lost to identity or measurement limits"},
+      "ip_loss_low": {"url": null, "year": 2026, "note": "est: lower-bound identity and measurement loss scenario"},
+      "ip_loss_high": {"url": null, "year": 2026, "note": "est: upper-bound identity and measurement loss scenario"}
+    }
+  },
+  {
+    "region": "shibuya_tokyo",
+    "pop": 30000,
+    "penetration": 0.22,
+    "spend": 420,
+    "affinity": 0.86,
+    "ip_loss_base": 0.14,
+    "ip_loss_low": 0.07,
+    "ip_loss_high": 0.25,
+    "sources": {
+      "pop": {"url": null, "year": 2026, "note": "est: rounded resident population for a compact Shibuya neighborhood catchment; illustrative, not an official boundary count"},
+      "penetration": {"url": null, "year": 2026, "note": "est: assumed 22% addressable-category adoption for a dense urban retail catchment"},
+      "spend": {"url": null, "year": 2026, "note": "est: assumed monthly discretionary category spend in USD per active consumer"},
+      "affinity": {"url": null, "year": 2026, "note": "est: proxy affinity score on a 0-to-1 scale based on assumed dense urban retail fit"},
+      "ip_loss_base": {"url": null, "year": 2026, "note": "est: assumed baseline share of addressable activity lost to identity or measurement limits"},
+      "ip_loss_low": {"url": null, "year": 2026, "note": "est: lower-bound identity and measurement loss scenario"},
+      "ip_loss_high": {"url": null, "year": 2026, "note": "est: upper-bound identity and measurement loss scenario"}
+    }
+  },
+  {
+    "region": "mayfair_london",
+    "pop": 20000,
+    "penetration": 0.20,
+    "spend": 900,
+    "affinity": 0.89,
+    "ip_loss_base": 0.11,
+    "ip_loss_low": 0.05,
+    "ip_loss_high": 0.21,
+    "sources": {
+      "pop": {"url": null, "year": 2026, "note": "est: rounded resident population for a compact Mayfair neighborhood catchment; illustrative, not an official boundary count"},
+      "penetration": {"url": null, "year": 2026, "note": "est: assumed 20% addressable-category adoption for an affluent urban retail catchment"},
+      "spend": {"url": null, "year": 2026, "note": "est: assumed monthly discretionary category spend in USD per active consumer"},
+      "affinity": {"url": null, "year": 2026, "note": "est: proxy affinity score on a 0-to-1 scale based on assumed premium retail fit"},
+      "ip_loss_base": {"url": null, "year": 2026, "note": "est: assumed baseline share of addressable activity lost to identity or measurement limits"},
+      "ip_loss_low": {"url": null, "year": 2026, "note": "est: lower-bound identity and measurement loss scenario"},
+      "ip_loss_high": {"url": null, "year": 2026, "note": "est: upper-bound identity and measurement loss scenario"}
+    }
+  },
+  {
+    "region": "milan_centro",
+    "pop": 100000,
+    "penetration": 0.17,
+    "spend": 500,
+    "affinity": 0.81,
+    "ip_loss_base": 0.13,
+    "ip_loss_low": 0.06,
+    "ip_loss_high": 0.23,
+    "sources": {
+      "pop": {"url": null, "year": 2026, "note": "est: rounded resident population for a broad central Milan catchment; illustrative, not an official boundary count"},
+      "penetration": {"url": null, "year": 2026, "note": "est: assumed 17% addressable-category adoption for a central urban retail catchment"},
+      "spend": {"url": null, "year": 2026, "note": "est: assumed monthly discretionary category spend in USD per active consumer"},
+      "affinity": {"url": null, "year": 2026, "note": "est: proxy affinity score on a 0-to-1 scale based on assumed central retail fit"},
+      "ip_loss_base": {"url": null, "year": 2026, "note": "est: assumed baseline share of addressable activity lost to identity or measurement limits"},
+      "ip_loss_low": {"url": null, "year": 2026, "note": "est: lower-bound identity and measurement loss scenario"},
+      "ip_loss_high": {"url": null, "year": 2026, "note": "est: upper-bound identity and measurement loss scenario"}
+    }
+  },
+  {
+    "region": "lagos_ikoyi",
+    "pop": 120000,
+    "penetration": 0.15,
+    "spend": 300,
+    "affinity": 0.76,
+    "ip_loss_base": 0.20,
+    "ip_loss_low": 0.10,
+    "ip_loss_high": 0.34,
+    "sources": {
+      "pop": {"url": null, "year": 2026, "note": "est: rounded resident population for a broad Ikoyi catchment; illustrative, not an official boundary count"},
+      "penetration": {"url": null, "year": 2026, "note": "est: assumed 15% addressable-category adoption for an urban retail catchment"},
+      "spend": {"url": null, "year": 2026, "note": "est: assumed monthly discretionary category spend in USD per active consumer"},
+      "affinity": {"url": null, "year": 2026, "note": "est: proxy affinity score on a 0-to-1 scale based on assumed urban retail fit"},
+      "ip_loss_base": {"url": null, "year": 2026, "note": "est: assumed baseline share of addressable activity lost to identity or measurement limits"},
+      "ip_loss_low": {"url": null, "year": 2026, "note": "est: lower-bound identity and measurement loss scenario"},
+      "ip_loss_high": {"url": null, "year": 2026, "note": "est: upper-bound identity and measurement loss scenario"}
+    }
+  }
+]
