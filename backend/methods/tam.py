@@ -29,6 +29,11 @@ def _has_citation(sources: Any, field: str) -> bool:
     return isinstance(url, str) and bool(url.strip()) and year is not None and bool(str(year).strip())
 
 
+def _loss_fraction(value: float) -> float:
+    """Interpret losses up to magnitude one as fractions, otherwise percentages."""
+    return value if abs(value) <= 1.0 else value / 100.0
+
+
 def _calculate(values: dict[str, float], changed_field: str | None = None,
                multiplier: float = 1.0, loss_field: str = "ip_loss_base") -> float:
     """Calculate regional expansion, optionally varying one assumption."""
@@ -37,7 +42,7 @@ def _calculate(values: dict[str, float], changed_field: str | None = None,
         changed[changed_field] *= multiplier
     return (changed["pop"] * changed["penetration"] * changed["spend"]
             * (changed["affinity"] / 100.0)
-            * (1.0 - changed[loss_field] / 100.0))
+            * (1.0 - _loss_fraction(changed[loss_field])))
 
 
 def tam_expansion(regions: list[dict[str, Any]], sensitivity_range: float = 0.30) -> dict[str, Any]:
