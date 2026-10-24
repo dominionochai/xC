@@ -1,62 +1,105 @@
-"""Offline tests for fit scoring."""
+"""Contract tests for asymmetric, evidence-backed fit values."""
 import unittest
 
-from backend.src.engine.fit import fit, normalize_score
+from engine.fit import fit
 
 
 class FakeQloo:
-    def __init__(self, payload):
-        self.payload = payload
-        self.calls = 0
+    def __init__(self, responses=()):
+        self.responses = list(responses)
+        self.call_count = 0
 
-    def get_fit(self):
-        self.calls += 1
-        return self.payload
+    def _call(self, *args, **kwargs):
+        self.call_count += 1
+        return self.responses.pop(0) if self.responses else {"results": []}
+
+    search = _call
+    search_entities = _call
+    lookup = _call
+    request = _call
+
+
+def _invoke(fn, values):
+    import inspect
+    aliases = {
+        "profile": "profile", "source": "profile", "left": "profile", "a": "profile",
+        "candidate": "candidate", "entity": "candidate", "target": "candidate",
+        "item": "candidate", "right": "candidate", "b": "candidate",
+        "qloo": "qloo", "client": "qloo", "api": "qloo",
+        "evidence": "evidence", "provenance": "provenance",
+    }
+    sig = inspect.signature(fn)
+    kwargs = {}
+    has_kwargs = False
+    for p in sig.parameters.values():
+        if p.kind == p.VAR_KEYWORD:
+            has_kwargs = True
+        elif p.name in aliases and aliases[p.name] in values:
+            kwargs[p.name] = values[aliases[p.name]]
+    if has_kwargs:
+        kwargs.update({k: v for k, v in values.items() if k not in kwargs})
+    return fn(**kwargs)
+
+
+def _value(result):
+    if isinstance(result, dict):
+        for key in ("value", "fit", "score"):
+            if key in result and isinstance(result[key], (int, float)):
+                return float(result[key])
+    for key in ("value", "fit", "score"):
+        val = getattr(result, key, None)
+        if isinstance(val, (int, float)):
+            return float(val)
+    if isinstance(result, (int, float)):
+        return float(result)
+    raise AssertionError("fit result did not expose a numeric value")
 
 
 class FitTests(unittest.TestCase):
-    def test_weighted_normalized_mean(self):
-        qloo = FakeQloo({"components": [
-            {"name": "music", "score": 80, "weight": 3},
-            {"name": "travel", "score": 0.4, "weight": 1},
-        ]})
-        result = fit(qloo)
-        self.assertAlmostEqual(result["score"], 0.7)
-        self.assertEqual(result["coverage"], 1.0)
-        self.assertEqual(qloo.calls, 1)
-        self.assertEqual(result["formula"], "weighted_mean(normalized_scores)")
+    def setUp(self):
+        self.qloo = FakeQloo()
+        self.profile = {
+            "id": "source", "value": 0.8,
+            "evidence": [{"axis": "genre", "value": 0.8, "strength": "strong",
+                          "source": "profile:genre"}],
+            "provenance": ["profile:genre"],
+        }
+        self.strong = {
+            "id": "strong-target", "value": 0.75, "match_strength": "strong",
+            "evidence": [{"axis": "genre", "value": 0.75, "strength": "strong",
+                          "source": "catalog:genre"}],
+            "provenance": ["catalog:genre"],
+        }
+        self.weak = {
+            "id": "weak-target", "value": 0.75, "match_strength": "weak",
+            "evidence": [{"axis": "genre", "value": 0.75, "strength": "weak",
+                          "source": "catalog:genre-weak"}],
+            "provenance": ["catalog:genre-weak"],
+        }
 
-    def test_invalid_and_missing_values_are_excluded(self):
-        qloo = FakeQloo({"signals": [
-            {"name": "valid", "affinity": 1.2},
-            {"name": "missing", "score": None},
-            {"name": "invalid", "score": "nan"},
-        ]})
-        result = fit(qloo)
-        self.assertEqual(result["score"], 1.0)
-        self.assertAlmostEqual(result["coverage"], 1 / 3)
-        self.assertEqual(result["components"][1]["score"], None)
-        self.assertEqual(len(result["evidence"]), 3)
+    def _fit(self, profile, candidate):
+        return _invoke(fit, {"profile": profile, "candidate": candidate,
+                             "qloo": self.qloo,
+                             "evidence": candidate.get("evidence"),
+                             "provenance": candidate.get("provenance")})
 
-    def test_explicit_weights_override_component_weights(self):
-        result = fit(FakeQloo({"components": [
-            {"name": "a", "score": 0.2, "weight": 100},
-            {"name": "b", "score": 0.8, "weight": 100},
-        ]}), weights={"a": 3, "b": 1})
-        self.assertAlmostEqual(result["score"], 0.35)
+    def test_strong_evidence_produces_greater_value_than_weak_evidence(self):
+        strong_value = _value(self._fit(self.profile, self.strong))
+        weak_value = _value(self._fit(self.profile, self.weak))
+        self.assertGreater(strong_value, weak_value)
 
-    def test_budget_checked_before_qloo_call(self):
-        qloo = FakeQloo({"score": 0.5})
-        result = fit(qloo, budget=lambda: False)
-        self.assertEqual(qloo.calls, 0)
-        self.assertIsNone(result["score"])
-        self.assertIn("qloo_fit_failed: RuntimeError", result["warnings"])
+    def test_fit_is_asymmetric_when_source_and_target_are_reversed(self):
+        forward = _value(self._fit(self.profile, self.strong))
+        reverse = _value(self._fit(self.strong, self.profile))
+        self.assertNotEqual(forward, reverse)
 
-    def test_normalize_score_handles_clamps_and_invalid_values(self):
-        self.assertEqual(normalize_score(-2), 0.0)
-        self.assertEqual(normalize_score(125), 1.0)
-        self.assertEqual(normalize_score(0.25), 0.25)
-        self.assertIsNone(normalize_score("not-a-number"))
+    def test_result_retains_evidence_and_provenance(self):
+        result = self._fit(self.profile, self.strong)
+        rendered = repr(result)
+        self.assertIn("profile:genre", rendered)
+        self.assertIn("catalog:genre", rendered)
+        self.assertIn("evidence", rendered.lower())
+        self.assertIn("provenance", rendered.lower())
 
 
 if __name__ == "__main__":
