@@ -108,11 +108,24 @@ class XcLedgerBridge:
     def verify(self, ledger: list[dict[str, Any]]) -> bool:
         """Delegate to the existing verifier, with a local validation fallback."""
         try:
-            try:
-                from backend.src.services.evidence_ledger import XcEvidenceLedger
-            except Exception:
-                from backend.evidence_ledger import XcEvidenceLedger
-            verifier = XcEvidenceLedger()
+            ledger_class = None
+            for module_path in (
+                "backend.src.services.evidence_ledger",
+                "backend.evidence_ledger",
+                "backend.src.evidence_ledger",
+                "src.services.evidence_ledger",
+                "services.evidence_ledger",
+                "evidence_ledger",
+            ):
+                try:
+                    module = __import__(module_path, fromlist=["XcEvidenceLedger"])
+                    ledger_class = getattr(module, "XcEvidenceLedger")
+                    break
+                except Exception:
+                    continue
+            if ledger_class is None:
+                return EvidenceLedgerAdapter(ledger).verify()
+            verifier = ledger_class()
             if hasattr(verifier, "_records"):
                 verifier._records = ledger
             report = verifier.verify()
