@@ -8,8 +8,8 @@ from .fit import (
     contrast_axes,
     demographic_normalized_differences,
 )
-from .anti import anti_portfolio
-from .communities import analyze_communities
+from .anti import anti_cooccurrence
+from .communities import build_communities
 
 __all__ = [
     "resolve_entity",
@@ -18,6 +18,6 @@ __all__ = [
     "shared_signals",
     "contrast_axes",
     "demographic_normalized_differences",
-    "anti_portfolio",
-    "analyze_communities",
+    "anti_cooccurrence",
+    "build_communities",
 ]
