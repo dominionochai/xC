@@ -43,7 +43,11 @@ def _score_values(values: Any) -> list[float]:
     return output
 
 
-def fit_affinity(scores: Any, comparison_scores: Any = None, notes: Iterable[str] | None = None) -> dict[str, Any]:
+def fit_affinity(
+    scores: Any,
+    comparison_scores: Any = None,
+    notes: Iterable[str] | None = None,
+) -> dict[str, Any]:
     """Return a percentage affinity as 100 times the mean available score.
 
     Either input may be a scalar, sequence, or mapping of per-domain scores.
@@ -65,31 +69,78 @@ def weighted_jaccard(left: Any, right: Any) -> float:
     """Compute weighted Jaccard similarity over the union of signal keys."""
     a, b = _weights(left), _weights(right)
     keys = set(a) | set(b)
-    denominator = sum(max(a.get(k, 0.0), b.get(k, 0.0)) for k in keys)
+    denominator = sum(max(a.get(key, 0.0), b.get(key, 0.0)) for key in keys)
     if denominator == 0:
         return 0.0
-    return sum(min(a.get(k, 0.0), b.get(k, 0.0)) for k in keys) / denominator
+    return sum(min(a.get(key, 0.0), b.get(key, 0.0)) for key in keys) / denominator
 
 
-def shared_signals(left: Any, right: Any, limit: int | None = None) -> list[dict[str, Any]]:
-    """List common positive signals, sorted by descending shared/minimum weight."""
-    a, b = _weights(left), _weights(right)
+def tag_overlap(profile_a: Any, profile_b: Any) -> float | None:
+    """Return weighted Jaccard overlap for two tag profiles.
+
+    The overlap is the sum of per-tag minimum weights divided by the sum of
+    per-tag maximum weights. Return ``None`` when either profile has no
+    positive, valid weights.
+    """
+    a, b = _weights(profile_a), _weights(profile_b)
+    if not any(a.values()) or not any(b.values()):
+        return None
+    keys = set(a) | set(b)
+    denominator = sum(max(a.get(key, 0.0), b.get(key, 0.0)) for key in keys)
+    if denominator == 0:
+        return None
+    numerator = sum(min(a.get(key, 0.0), b.get(key, 0.0)) for key in keys)
+    return numerator / denominator
+
+
+def shared_signals(
+    profile_a: Any,
+    profile_b: Any,
+    top: int | None = None,
+    *,
+    limit: int | None = None,
+) -> list[dict[str, Any]]:
+    """List common positive signals, sorted by descending shared/minimum weight.
+
+    ``limit`` is retained as a keyword-only compatibility alias for ``top``.
+    """
+    a, b = _weights(profile_a), _weights(profile_b)
     shared = [
-        {"signal": key, "left_weight": a[key], "right_weight": b[key], "weight": min(a[key], b[key])}
-        for key in set(a) & set(b) if min(a[key], b[key]) > 0
+        {
+            "signal": key,
+            "left_weight": a[key],
+            "right_weight": b[key],
+            "weight": min(a[key], b[key]),
+        }
+        for key in set(a) & set(b)
+        if min(a[key], b[key]) > 0
     ]
     shared.sort(key=lambda row: (-row["weight"], row["signal"]))
-    return shared if limit is None else shared[:max(0, int(limit))]
+    count = top if top is not None else limit
+    return shared if count is None else shared[: max(0, int(count))]
 
 
-def contrast_axes(left: Any, right: Any) -> list[dict[str, Any]]:
-    """Return signed axis differences (left minus right), largest first."""
-    a, b = _weights(left), _weights(right)
-    rows = []
-    for key in set(a) | set(b):
-        av, bv = a.get(key, 0.0), b.get(key, 0.0)
-        rows.append({"axis": key, "left": av, "right": bv, "difference": av - bv, "magnitude": abs(av - bv)})
-    return sorted(rows, key=lambda row: (-row["magnitude"], row["axis"]))
+def contrast_axes(profile_a: Any, profile_b: Any) -> list[dict[str, Any]]:
+    """Return tag differences, with positive deltas indicating target strength.
+
+    ``profile_a`` is the acquirer and ``profile_b`` is the target. Strength is
+    the signed delta divided by the largest weight in either profile.
+    """
+    acquirer, target = _weights(profile_a), _weights(profile_b)
+    largest_weight = max((*acquirer.values(), *target.values()), default=0.0)
+    rows: list[dict[str, Any]] = []
+    for tag in set(acquirer) | set(target):
+        delta = target.get(tag, 0.0) - acquirer.get(tag, 0.0)
+        strength = delta / largest_weight if largest_weight else 0.0
+        rows.append(
+            {
+                "tag": tag,
+                "delta": delta,
+                "side": "target" if delta > 0 else "acquirer",
+                "strength": strength,
+            }
+        )
+    return sorted(rows, key=lambda row: (-abs(row["strength"]), row["tag"]))
 
 
 def demographic_normalized_differences(acquirer: Any, target: Any) -> list[dict[str, Any]]:
@@ -107,6 +158,23 @@ def demographic_normalized_differences(acquirer: Any, target: Any) -> list[dict[
         for key in sorted(set(av) | set(tv)):
             a_share = av.get(key, 0.0) / asum if asum else 0.0
             t_share = tv.get(key, 0.0) / tsum if tsum else 0.0
-            output.append({"prompt": prompt, "group": key, "acquirer_share": a_share,
-                           "target_share": t_share, "difference": t_share - a_share})
+            output.append({
+                "prompt": prompt, "group": key, "acquirer_share": a_share,
+                "target_share": t_share, "difference": t_share - a_share})
     return output
+
+
+def demographic_skew(demo_a: Any, demo_b: Any) -> dict[str, float] | None:
+    """Return per-bucket differences in normalized shares (demo_b minus demo_a).
+
+    Return ``None`` if either demographic mapping is missing or has no positive
+    valid total to normalize.
+    """
+    a, b = _weights(demo_a), _weights(demo_b)
+    total_a, total_b = sum(a.values()), sum(b.values())
+    if not total_a or not total_b:
+        return None
+    return {
+        bucket: b.get(bucket, 0.0) / total_b - a.get(bucket, 0.0) / total_a
+        for bucket in sorted(set(a) | set(b))
+    }
