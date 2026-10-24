@@ -14,6 +14,7 @@ class LocalityAnalysisTests(unittest.TestCase):
             regions=["soho_nyc"],
             global_affinity=52,
         )
+        result = result["soho_nyc"]
 
         self.assertEqual(result["affinity"], 61)
         self.assertEqual(result["ladder_level"], 1)
@@ -27,6 +28,7 @@ class LocalityAnalysisTests(unittest.TestCase):
             city_fallback_fn=lambda _region: 47,
             regions=["soho_nyc"],
         )
+        result = result["soho_nyc"]
 
         self.assertEqual(result["affinity"], 47)
         self.assertEqual(result["ladder_level"], 3)
@@ -41,6 +43,7 @@ class LocalityAnalysisTests(unittest.TestCase):
             city_fallback_fn=lambda _region: None,
             regions=["soho_nyc"],
         )
+        result = result["soho_nyc"]
 
         self.assertIsNone(result["affinity"])
         self.assertEqual(result["reason"], "all_levels_failed")
