@@ -1,5 +1,6 @@
 """Defensive, tolerant helpers for inconsistent Qloo JSON envelopes."""
 from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -40,12 +41,9 @@ def normalize_results(payload: Any) -> list[dict[str, str]]:
         entity = _entity(item)
         if entity is None:
             continue
-        identity = next((_text(entity.get(k)) for k in ("id", "entity_id", "uri")
-                         if _text(entity.get(k))), None)
-        name = next((_text(entity.get(k)) for k in ("name", "label", "title")
-                     if _text(entity.get(k))), None)
-        kind = next((_text(entity.get(k)) for k in ("type", "entity_type", "category")
-                     if _text(entity.get(k))), None)
+        identity = next((_text(entity.get(key)) for key in ("id", "entity_id", "uri") if _text(entity.get(key))), None)
+        name = next((_text(entity.get(key)) for key in ("name", "label", "title") if _text(entity.get(key))), None)
+        kind = next((_text(entity.get(key)) for key in ("type", "entity_type", "category") if _text(entity.get(key))), None)
         if identity is None and name is None:
             continue
         identity = identity or name
@@ -85,3 +83,40 @@ def is_suspect_empty(payload: Any) -> bool:
                 return not value
         return not results
     return results is None
+
+
+def is_empty_results(payload: Any) -> bool:
+    """Compatibility alias for the package's suspicious-empty diagnostic."""
+    return is_suspect_empty(payload)
+
+
+def shape_paths(payload: Any) -> list[str]:
+    """Return sorted-by-input dotted paths describing mapping/list structure.
+
+    Mapping keys are joined with dots and list contents use ``[]`` instead of
+    numeric indexes, so equivalent payload shapes produce equivalent paths.
+    Non-container values are treated as leaves.
+    """
+    paths: list[str] = []
+    seen: set[str] = set()
+
+    def add(path: str) -> None:
+        if path not in seen:
+            seen.add(path)
+            paths.append(path)
+
+    def visit(value: Any, path: str) -> None:
+        if isinstance(value, Mapping):
+            for key in value:
+                part = str(key)
+                child = f"{path}.{part}" if path else part
+                add(child)
+                visit(value[key], child)
+        elif isinstance(value, list):
+            marker = f"{path}[]" if path else "[]"
+            add(marker)
+            for item in value:
+                visit(item, marker)
+
+    visit(payload, "")
+    return paths
