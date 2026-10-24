@@ -69,23 +69,25 @@ class ResolutionMethodTests(unittest.TestCase):
 
     def test_auto_select_exact(self):
         result = _invoke(self.resolve, "Acme", [{"id": "exact", "name": "Acme"},
-                                                   {"id": "other", "name": "Acme Holdings"}])
+                                                  {"id": "other", "name": "Acme Holdings"}])
         self.assertIn("exact", _flatten(result).lower())
 
     def test_two_to_one_dominance(self):
         result = _invoke(self.resolve, "Acme", [{"id": "dominant", "name": "Acme", "score": .8},
-                                                   {"id": "runner_up", "name": "Acme Ltd", "score": .4}])
+                                                  {"id": "runner_up", "name": "Acme Ltd", "score": .4}])
         self.assertIn("dominant", _flatten(result).lower())
 
     def test_aime_is_ambiguous(self):
         result = _invoke(self.resolve, "aimé", [{"id": "aime", "name": "Aime", "score": .8},
-                                                   {"id": "aimee", "name": "Aimee", "score": .8}])
+                                                 {"id": "aimee", "name": "Aimee", "score": .8}])
         text = _flatten(result).lower()
-        self.assertTrue("ambig" in text or "aime" not in text,
+        self.assertTrue("ambigu" in text or "aime" not in text,
                         "an equally plausible accented query should not silently select a candidate")
 
     def test_porsche_confidence_is_point_eight_two_two(self):
-        result = _invoke(self.resolve, "porsche", [{"id": "porsche", "name": "Porsche", "confidence": .822}])
+        candidates = [{"id": "porsche", "name": "Porsche", "confidence": .822}]
+        candidates_fn = lambda query, entity_type=None: candidates
+        result = self.resolve("porsche", search_fn=candidates_fn)
         confidence = _confidence(result)
         if confidence is not None:
             self.assertAlmostEqual(confidence, .822)
