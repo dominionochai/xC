@@ -1,25 +1,43 @@
 # xC API
 
-The backend serves the API from the FastAPI application in `backend.app`.
+Versioned API base path: `/api/v1`. JSON endpoints accept and return JSON unless noted. Request bodies are limited to 64 KB; larger requests are rejected with `413 Payload Too Large`.
 
-## Built-in analysis presets
+## Authentication and service limits
 
-`GET /api/v1/presets` returns the built-in analysis preset catalog as a JSON array. Each item includes its stable `id`, display `name`, `description`, and `risk_tolerance`. This read-only endpoint does not require Qloo credentials, so clients can populate a preset selector before a report is submitted.
+If `XC_API_TOKEN` is configured, send it as `Authorization: Bearer <token>`. Requests with a missing or invalid token receive `401 Unauthorized`. Authentication is optional when the service is configured without a token.
 
-```sh
-curl http://localhost:8000/api/v1/presets
+At most three runs may be active concurrently. Requests that would exceed this limit are rejected with `429 Too Many Requests`. Each run is subject to a Qloo budget of 60 seconds and a total wall-clock budget of 90 seconds.
+
+## Endpoints
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/v1/resolve` | Resolve the supplied input and return the resolution result. |
+| `POST` | `/api/v1/reports` | Create a report from the supplied request. |
+| `GET` | `/api/v1/reports/{report_id}` | Retrieve a report by its identifier. |
+| `POST` | `/api/v1/generate` | Start generation and return its run information. |
+| `POST` | `/api/v1/generate/stream` | Start generation and receive progress/results as a Server-Sent Events (SSE) stream. |
+| `POST` | `/api/v1/runs/{run_id}/cancel` | Request cancellation of a run. |
+| `GET` | `/api/v1/memo.md` | Retrieve the memo as Markdown. |
+| `GET` | `/api/v1/memo.pdf` | PDF export is not implemented; this endpoint returns `501 Not Implemented`. No PDF payload is produced. |
+| `GET` | `/health` | Check service health. |
+
+### Run lifecycle
+
+A run moves from `queued` to `running`, then reaches a terminal state: `completed`, `failed`, or `cancelled`. Cancellation is a request; a run that has already reached a terminal state does not become active again. Run generation is bounded by the limits above.
+
+### Streaming and replay
+
+The stream uses SSE. Each frame has exactly this wire format, including the blank line terminating the frame:
+
+```text
+event: <type>
+data: <json>
+
 ```
 
-The current identifiers are `brand_launch`, `brand_repositioning`, and `market_entry`. Use a returned `id` as `preset_id` in `POST /api/v1/reports/analyze`.
+Clients can reconnect with `Last-Event-ID` to request replay after the last event they received. If the requested run/event history cannot be resumed, the server reports `RUN_NOT_RESUMABLE`; clients should treat that run's stream as non-resumable rather than assuming events were replayed.
 
-## Analyze a report
+## Legacy route
 
-`POST /api/v1/reports/analyze` accepts JSON with `source_entity_id`, `comparison_entity_id`, `regions` (a non-empty mapping of region names to non-negative integer populations), and `annual_spend_per_person`. `entity_type` defaults to `urn:entity:brand`; `preset_id` defaults to `market_entry`. The endpoint requires a `QLOO_API_KEY` and returns a `503` when that credential is not configured. Qloo request failures are surfaced as `502`.
-
-```sh
-curl -X POST http://localhost:8000/api/v1/reports/analyze \
-  -H 'content-type: application/json' \
-  -d '{"source_entity_id":"urn:entity:brand:source","comparison_entity_id":"urn:entity:brand:target","regions":{"US":1000},"annual_spend_per_person":25,"preset_id":"market_entry"}'
-```
-
-`GET /health` is a lightweight process health check and does not make external service requests.
+Legacy `POST /analyze` is deprecated and will be removed once the contract path is verified.
