@@ -35,6 +35,8 @@ class EngineReport(BaseModel):
             raise ValueError("status must be complete, partial, or empty")
         return self
 
+ReportResult = EngineReport
+
 def assemble_report(results: dict[str, Any], warnings: list[str] | None = None) -> EngineReport:
     evidence: list[Evidence] = []
     sources: list[str] = []
@@ -49,6 +51,16 @@ def assemble_report(results: dict[str, Any], warnings: list[str] | None = None) 
             if isinstance(prov, dict): sources.extend(str(s) for s in prov.get("sources", []) or [])
     status = "empty" if not results else ("partial" if warnings else "complete")
     return EngineReport(status=status, results=results, provenance=Provenance(sources=list(dict.fromkeys(sources)), evidence=evidence), evidence=evidence, warnings=warnings or [])
+
+def assemble(result: dict) -> ReportResult:
+    if not isinstance(result, dict):
+        raise ValueError("result must be a dict")
+    try:
+        return assemble_report(result)
+    except ValueError:
+        raise
+    except Exception as exc:
+        raise ValueError("invalid report result") from exc
 
 def validate_report(value: Any) -> EngineReport:
     return EngineReport.model_validate(value)
