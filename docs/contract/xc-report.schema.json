@@ -1,0 +1,255 @@
+{
+  "$defs": {
+    "Assumption": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {"default": "", "title": "Key", "type": "string"},
+        "name": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Name"},
+        "value": {"default": null, "title": "Value"},
+        "unit": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Unit"},
+        "description": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Description"},
+        "source": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Source"},
+        "confidence": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Confidence"},
+        "percent": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Percent"},
+        "index": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Index"},
+        "ratio": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Ratio"}
+      },
+      "title": "Assumption",
+      "type": "object"
+    },
+    "BridgeStep": {
+      "additionalProperties": false,
+      "properties": {
+        "step": {"anyOf": [{"minimum": 0, "type": "integer"}, {"type": "null"}], "default": null, "title": "Step"},
+        "source": {"anyOf": [{"$ref": "#/$defs/EntityRef"}, {"type": "string"}, {"type": "null"}], "default": null, "title": "Source"},
+        "target": {"anyOf": [{"$ref": "#/$defs/EntityRef"}, {"type": "string"}, {"type": "null"}], "default": null, "title": "Target"},
+        "from_entity": {"anyOf": [{"$ref": "#/$defs/EntityRef"}, {"type": "string"}, {"type": "null"}], "default": null, "title": "From Entity"},
+        "to_entity": {"anyOf": [{"$ref": "#/$defs/EntityRef"}, {"type": "string"}, {"type": "null"}], "default": null, "title": "To Entity"},
+        "entity": {"anyOf": [{"$ref": "#/$defs/EntityRef"}, {"type": "string"}, {"type": "null"}], "default": null, "title": "Entity"},
+        "via": {"anyOf": [{"$ref": "#/$defs/EntityRef"}, {"type": "string"}, {"type": "null"}], "default": null, "title": "Via"},
+        "label": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Label"},
+        "affinity": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Affinity"},
+        "ratio": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Ratio"},
+        "index": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Index"},
+        "description": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Description"}
+      },
+      "title": "BridgeStep",
+      "type": "object"
+    },
+    "Channel": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Id"},
+        "name": {"default": "", "title": "Name", "type": "string"},
+        "channel": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Channel"},
+        "description": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Description"},
+        "audience": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Audience"},
+        "reach": {"anyOf": [{"type": "number"}, {"type": "null"}], "default": null, "title": "Reach"},
+        "percent": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Percent"},
+        "index": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Index"},
+        "ratio": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Ratio"},
+        "cost": {"anyOf": [{"minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Cost"}
+      },
+      "title": "Channel",
+      "type": "object"
+    },
+    "Community": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Id"},
+        "name": {"default": "", "title": "Name", "type": "string"},
+        "label": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Label"},
+        "description": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Description"},
+        "audience": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Audience"},
+        "size": {"anyOf": [{"type": "number"}, {"type": "null"}], "default": null, "title": "Size"},
+        "percent": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Percent"},
+        "share_percent": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Share Percent"},
+        "index": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Index"},
+        "ratio": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Ratio"},
+        "penetration_rate": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Penetration Rate"},
+        "demographics": {"anyOf": [{"$ref": "#/$defs/Demographics"}, {"type": "null"}], "default": null, "title": "Demographics"},
+        "signals": {"items": {"$ref": "#/$defs/Signal"}, "title": "Signals", "type": "array"}
+      },
+      "title": "Community",
+      "type": "object"
+    },
+    "ContrastAxis": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {"default": "", "title": "Name", "type": "string"},
+        "label": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Label"},
+        "left": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Left"},
+        "right": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Right"},
+        "low": {"anyOf": [{"type": "number"}, {"type": "null"}], "default": null, "title": "Low"},
+        "high": {"anyOf": [{"type": "number"}, {"type": "null"}], "default": null, "title": "High"},
+        "delta": {"anyOf": [{"type": "number"}, {"type": "null"}], "default": null, "title": "Delta"},
+        "percent": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Percent"},
+        "index": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Index"},
+        "ratio": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Ratio"}
+      },
+      "title": "ContrastAxis",
+      "type": "object"
+    },
+    "Demographics": {
+      "additionalProperties": false,
+      "properties": {
+        "age": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Age"},
+        "gender": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Gender"},
+        "income": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Income"},
+        "ethnicity": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Ethnicity"},
+        "education": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Education"},
+        "location": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Location"},
+        "segment": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Segment"},
+        "percent": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Percent"},
+        "index": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Index"},
+        "ratio": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Ratio"},
+        "attributes": {"additionalProperties": true, "title": "Attributes", "type": "object"}
+      },
+      "title": "Demographics",
+      "type": "object"
+    },
+    "EntityRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Id"},
+        "entity_id": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Entity Id"},
+        "name": {"default": "", "title": "Name", "type": "string"},
+        "entity_type": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Entity Type"},
+        "type": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Type"},
+        "slug": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Slug"},
+        "url": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Url"}
+      },
+      "title": "EntityRef",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {"title": "Source", "type": "string"},
+        "detail": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Detail"},
+        "value": {"default": null, "title": "Value"}
+      },
+      "required": ["source"],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "LedgerEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Id"},
+        "claim": {"default": "", "title": "Claim", "type": "string"},
+        "statement": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Statement"},
+        "source": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Source"},
+        "sources": {"items": {"type": "string"}, "title": "Sources", "type": "array"},
+        "evidence": {"items": {"$ref": "#/$defs/Evidence"}, "title": "Evidence", "type": "array"},
+        "value": {"default": null, "title": "Value"},
+        "confidence": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Confidence"},
+        "status": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Status"},
+        "created_at": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Created At"}
+      },
+      "title": "LedgerEntry",
+      "type": "object"
+    },
+    "Metric": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {"default": "", "title": "Name", "type": "string"},
+        "label": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Label"},
+        "value": {"anyOf": [{"type": "number"}, {"type": "null"}], "default": null, "title": "Value"},
+        "unit": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Unit"},
+        "provenance": {"anyOf": [{"minLength": 1, "type": "string"}, {"type": "null"}], "default": null, "title": "Provenance"}
+      },
+      "title": "Metric",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "sources": {"items": {"type": "string"}, "title": "Sources", "type": "array"},
+        "evidence": {"items": {"$ref": "#/$defs/Evidence"}, "title": "Evidence", "type": "array"}
+      },
+      "title": "Provenance",
+      "type": "object"
+    },
+    "RegionResult": {
+      "additionalProperties": false,
+      "properties": {
+        "region": {"default": "", "title": "Region", "type": "string"},
+        "region_id": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Region Id"},
+        "name": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Name"},
+        "population": {"anyOf": [{"type": "number"}, {"type": "null"}], "default": null, "title": "Population"},
+        "audience_size": {"anyOf": [{"type": "number"}, {"type": "null"}], "default": null, "title": "Audience Size"},
+        "percent": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Percent"},
+        "share_percent": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Share Percent"},
+        "index": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Index"},
+        "ratio": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Ratio"},
+        "penetration_rate": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Penetration Rate"},
+        "metrics": {"items": {"$ref": "#/$defs/Metric"}, "title": "Metrics", "type": "array"},
+        "signals": {"items": {"$ref": "#/$defs/Signal"}, "title": "Signals", "type": "array"}
+      },
+      "title": "RegionResult",
+      "type": "object"
+    },
+    "Sensitivity": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {"default": "", "title": "Name", "type": "string"},
+        "parameter": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Parameter"},
+        "metric": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Metric"},
+        "low": {"anyOf": [{"type": "number"}, {"type": "null"}], "default": null, "title": "Low"},
+        "high": {"anyOf": [{"type": "number"}, {"type": "null"}], "default": null, "title": "High"},
+        "impact": {"anyOf": [{"type": "number"}, {"type": "null"}], "default": null, "title": "Impact"},
+        "impact_percent": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Impact Percent"},
+        "percent": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Percent"},
+        "index": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Index"},
+        "ratio": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Ratio"},
+        "elasticity": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Elasticity"},
+        "description": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Description"}
+      },
+      "title": "Sensitivity",
+      "type": "object"
+    },
+    "Signal": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {"default": "", "title": "Name", "type": "string"},
+        "label": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Label"},
+        "value": {"anyOf": [{"type": "number"}, {"type": "null"}], "default": null, "title": "Value"},
+        "percent": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Percent"},
+        "index": {"anyOf": [{"maximum": 100.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Index"},
+        "ratio": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Ratio"},
+        "confidence": {"anyOf": [{"maximum": 1.0, "minimum": 0.0, "type": "number"}, {"type": "null"}], "default": null, "title": "Confidence"},
+        "description": {"anyOf": [{"type": "string"}, {"type": "null"}], "default": null, "title": "Description"},
+        "provenance": {"anyOf": [{"minLength": 1, "type": "string"}, {"type": "null"}], "default": null, "title": "Provenance"}
+      },
+      "title": "Signal",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"default": 1, "title": "Schema Version", "type": "integer"},
+    "status": {"default": "partial", "title": "Status", "type": "string"},
+    "results": {"additionalProperties": true, "title": "Results", "type": "object"},
+    "phase_results": {"anyOf": [{"additionalProperties": true, "type": "object"}, {"type": "null"}], "default": null, "title": "Phase Results"},
+    "phases": {"anyOf": [{"additionalProperties": true, "type": "object"}, {"type": "null"}], "default": null, "title": "Phases"},
+    "data": {"anyOf": [{"additionalProperties": true, "type": "object"}, {"type": "null"}], "default": null, "title": "Data"},
+    "provenance": {"anyOf": [{"$ref": "#/$defs/Provenance"}, {"items": {}, "type": "array"}, {"additionalProperties": true, "type": "object"}], "title": "Provenance"},
+    "evidence": {"items": {"$ref": "#/$defs/Evidence"}, "title": "Evidence", "type": "array"},
+    "warnings": {"items": {"type": "string"}, "title": "Warnings", "type": "array"},
+    "partial": {"default": false, "title": "Partial", "type": "boolean"},
+    "metrics": {"items": {"$ref": "#/$defs/Metric"}, "title": "Metrics", "type": "array"},
+    "signals": {"items": {"$ref": "#/$defs/Signal"}, "title": "Signals", "type": "array"},
+    "contrast_axes": {"items": {"$ref": "#/$defs/ContrastAxis"}, "title": "Contrast Axes", "type": "array"},
+    "demographics": {"anyOf": [{"$ref": "#/$defs/Demographics"}, {"type": "null"}], "default": null, "title": "Demographics"},
+    "channels": {"items": {"$ref": "#/$defs/Channel"}, "title": "Channels", "type": "array"},
+    "communities": {"items": {"$ref": "#/$defs/Community"}, "title": "Communities", "type": "array"},
+    "bridge": {"items": {"$ref": "#/$defs/BridgeStep"}, "title": "Bridge", "type": "array"},
+    "regions": {"items": {"$ref": "#/$defs/RegionResult"}, "title": "Regions", "type": "array"},
+    "assumptions": {"items": {"$ref": "#/$defs/Assumption"}, "title": "Assumptions", "type": "array"},
+    "sensitivity": {"items": {"$ref": "#/$defs/Sensitivity"}, "title": "Sensitivity", "type": "array"},
+    "ledger": {"items": {"$ref": "#/$defs/LedgerEntry"}, "title": "Ledger", "type": "array"}
+  },
+  "title": "ReportResult",
+  "type": "object"
+}
