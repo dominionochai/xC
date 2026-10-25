@@ -1,4 +1,5 @@
 """Offline tests for the guarded Qloo tool registry."""
+import json
 import unittest
 
 from agents.events import EventBus
@@ -58,38 +59,69 @@ class ToolTests(unittest.TestCase):
             "qloo_trending": {"category"},
             "verify_channel": {"channel_name", "contact"},
         }
+        self.assertEqual(len(expected), 7)
         self.assertEqual(set(REGISTRY), set(expected))
+        self.assertEqual({spec.name for spec in REGISTRY.values()}, set(expected))
         for name, properties in expected.items():
             with self.subTest(tool=name):
-                self.assertEqual(set(REGISTRY[name].json_schema["properties"]), properties)
+                self.assertEqual(REGISTRY[name].name, name)
+                self.assertEqual(
+                    set(REGISTRY[name].json_schema["properties"]), properties
+                )
 
     def test_wrappers_emit_call_then_result_and_forward_fields(self):
         qloo, budget = FakeQloo(), Budget(40)
         calls = [
-            (qloo_search, {"query": "music", "entity_type": "artist"}),
-            (qloo_affinity, {"entity_a": "a", "entity_b": "b"}),
-            (qloo_tags, {"entity_id": "e1"}),
-            (qloo_demographics, {"entity_id": "e1"}),
-            (qloo_heatmap, {"region": "US"}),
-            (qloo_trending, {"category": "music"}),
-            (verify_channel, {"channel_name": "example", "contact": "site"}),
+            ("qloo_search", qloo_search, {"query": "music", "entity_type": "artist"}),
+            ("qloo_affinity", qloo_affinity, {"entity_a": "a", "entity_b": "b"}),
+            ("qloo_tags", qloo_tags, {"entity_id": "e1"}),
+            ("qloo_demographics", qloo_demographics, {"entity_id": "e1"}),
+            ("qloo_heatmap", qloo_heatmap, {"region": "US"}),
+            ("qloo_trending", qloo_trending, {"category": "music"}),
+            (
+                "verify_channel",
+                verify_channel,
+                {"channel_name": "example", "contact": "site"},
+            ),
         ]
-        for wrapper, kwargs in calls:
-            self.assertTrue(wrapper(qloo, budget, **kwargs)["ok"])
+        results = {}
+        for name, wrapper, kwargs in calls:
+            results[name] = wrapper(qloo, budget, **kwargs)
+            self.assertTrue(results[name]["ok"])
+
         events = qloo.event_bus.get_run_events()
-        self.assertEqual([event["type"] for event in events],
-                         [kind for _ in calls for kind in ("tool.call", "tool.result")])
-        for index, (_wrapper, kwargs) in enumerate(calls):
-            self.assertEqual(events[index * 2]["payload_preview"]["parameters"], sorted(kwargs))
-            self.assertEqual(events[index * 2 + 1]["payload_preview"]["status"], "ok")
+        expected_types = [
+            event_type
+            for _ in calls
+            for event_type in ("tool.call", "tool.result")
+        ]
+        self.assertEqual([event["type"] for event in events], expected_types)
+
+        for index, (name, _wrapper, kwargs) in enumerate(calls):
+            with self.subTest(tool=name):
+                call_event = events[index * 2]
+                result_event = events[index * 2 + 1]
+                call_payload = json.loads(call_event["payload_preview"])
+                result_payload = json.loads(result_event["payload_preview"])
+                self.assertEqual(call_payload["tool"], name)
+                self.assertEqual(call_payload["parameters"], sorted(kwargs))
+                self.assertEqual(result_payload["tool"], name)
+                self.assertEqual(result_payload["status"], "ok")
+
+        self.assertEqual(
+            results["verify_channel"],
+            {"verified": True, "channel_name": "example", "contact": "site"},
+        )
         self.assertEqual(qloo.call_count, len(calls))
 
-    def test_exhausted_budget_has_no_result_event(self):
+    def test_exhausted_budget_has_no_tool_result_event(self):
         qloo = FakeQloo()
         result = qloo_search(qloo, ExhaustedBudget(), query="ignored")
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"], "budget_exhausted:qloo_search")
-        self.assertEqual(qloo.event_bus.get_run_events(), [])
+        events = qloo.event_bus.get_run_events()
+        self.assertEqual(events, [])
+        self.assertNotIn("tool.result", [event["type"] for event in events])
         self.assertEqual(qloo.call_count, 0)
 
 
