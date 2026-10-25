@@ -1,87 +1,77 @@
-"""Total-addressable-market estimates with explicit assumption provenance."""
+"""Thin adapter from regional inputs and Qloo locality to the M8 method."""
+from __future__ import annotations
 import json
-import os
+from pathlib import Path
+from typing import Any
+from backend.src import contract
+from backend.methods.tam import tam_expansion
+from backend.src.engine.locality import run as run_locality
 
-FACTORS = ("pop", "penetration", "spend", "affinity", "ip_loss_base")
+_FACTORS = ("pop", "penetration", "spend", "affinity", "ip_loss_base", "ip_loss_low", "ip_loss_high")
+_PROVENANCE = "backend.methods.tam.tam_expansion"
 
+def _as_list(value: Any) -> list[Any]:
+    if value is None: return []
+    return list(value) if isinstance(value, (list, tuple)) else [value]
 
-def _source_ok(region, key):
-    sources = region.get("sources") or {}
-    source = sources.get(key) if isinstance(sources, dict) else None
-    return isinstance(source, dict) and "year" in source and "note" in source and ("url" in source)
+def _default_regions() -> Any:
+    path = Path(__file__).resolve().parents[2] / "data" / "regions.json"
+    with path.open("r", encoding="utf-8") as source: return json.load(source)
 
-
-def _load_default():
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "regions.json"))
-    with open(path, "r", encoding="utf-8") as handle:
-        return json.load(handle)
-
-
-def _value(region, key):
-    value = region.get(key)
-    try: return float(value) if value is not None else None
-    except (TypeError, ValueError): return None
-
-
-def _calc(region, overrides=None):
-    overrides = overrides or {}
-    vals = {}
-    for key in FACTORS:
-        value = overrides.get(key, _value(region, key))
-        if value is not None: vals[key] = float(value)
-    if any(key not in vals for key in FACTORS): return None
-    pop, penetration, spend, affinity, loss = (vals[k] for k in FACTORS)
-    reach = pop * penetration
-    expansion = reach * spend * (affinity / 100.0) * (1.0 - loss / 100.0)
-    return {"reach": reach, "expansion": expansion}
-
-
-def run(qloo, budget, regions_data=None):
-    warnings, evidence, provenance = [], [], []
-    if regions_data is None:
-        try: regions_data = _load_default()
-        except Exception as exc:
-            return {"tam": None, "reason": "all_assumptions_null", "warnings": ["regions_data_unavailable:" + type(exc).__name__, "tam_partial"], "evidence": [], "provenance": []}
-    if isinstance(regions_data, dict): regions = regions_data.get("regions", [])
-    elif isinstance(regions_data, list): regions = regions_data
-    else: regions = []
-    region_results = []
-    tornado = {}
-    partial = False
-    total = 0.0; any_total = False
-    for region in regions:
-        if not isinstance(region, dict):
-            partial = True; warnings.append("invalid_region_record"); continue
-        name = region.get("region")
-        missing = []
-        for key in FACTORS:
-            if _value(region, key) is None:
-                missing.append(key)
-            elif not _source_ok(region, key):
-                missing.append(key + "_source")
-        if missing:
-            partial = True
-            warnings.extend(["missing_assumption:%s:%s" % (name, key) for key in missing])
-            region_results.append({"region": name, "reach": None, "expansion": None, "missing": missing, "sources": region.get("sources", {})})
-            continue
-        calc = _calc(region)
-        if calc is None:
-            partial = True; continue
-        any_total = True; total += calc["expansion"]
-        item = {"region": name, "reach": calc["reach"], "expansion": calc["expansion"], "assumptions": {key: _value(region, key) for key in FACTORS}, "sources": region.get("sources", {})}
-        region_results.append(item)
-        for factor in FACTORS:
-            base = _value(region, factor)
-            low_value = max(0.0, base * .70)
-            high_value = base * 1.30
-            low_calc = _calc(region, {factor: low_value})
-            high_calc = _calc(region, {factor: high_value})
-            key = str(name) + ":" + factor
-            tornado[key] = {"base": calc["expansion"], "minus_30_pct": low_calc["expansion"] if low_calc else None, "plus_30_pct": high_calc["expansion"] if high_calc else None}
-            source = region["sources"][factor]
-            evidence.append({"source": source, "assumption": factor, "region": name, "value": base})
-            provenance.append({"region": name, "assumption": factor, "source": source})
-    if not any_total:
-        return {"tam": None, "reason": "all_assumptions_null", "regions": region_results, "tornado": tornado, "warnings": warnings + (["tam_partial"] if partial else []), "evidence": evidence, "provenance": provenance}
-    if partial: warnings.append("tam_partial")
-    return {"tam": total, "regions": region_results, "tornado": tornado, "warnings": warnings, "evidence": evidence, "provenance": provenance}
+def run(qloo: Any, budget: Any, regions_data: Any = None) -> contract.ReportResult:
+    """Load region inputs, enrich with locality results, invoke M8, type its report."""
+    source = _default_regions() if regions_data is None else regions_data
+    records = source.get("regions", []) if isinstance(source, dict) else source
+    if not isinstance(records, list): records = []
+    locality_result = run_locality(qloo, budget, records)
+    locality_rows = locality_result.get("locality", []) if isinstance(locality_result, dict) else []
+    locality_by_name = {str(row.get("region")): row for row in locality_rows if isinstance(row, dict)}
+    inputs = []
+    for record in records:
+        if not isinstance(record, dict): continue
+        item = dict(record)
+        local = locality_by_name.get(str(item.get("region")))
+        if local is not None:
+            item["affinity"] = local.get("affinity")
+        inputs.append(item)
+    calculated = tam_expansion(inputs)
+    calculated = calculated if isinstance(calculated, dict) else {}
+    expansion_by_name = calculated.get("expansion", {})
+    expansion_by_name = expansion_by_name if isinstance(expansion_by_name, dict) else {}
+    metrics = [contract.Metric(name="tam_expansion", value=calculated.get("total_expansion"), unit="USD", provenance=_PROVENANCE)]
+    if "baseline_total" in calculated:
+        metrics.append(contract.Metric(name="baseline_total", value=calculated.get("baseline_total"), unit="USD", provenance=_PROVENANCE))
+    regions = []
+    assumptions = []
+    for record in inputs:
+        name = str(record.get("region", ""))
+        result = expansion_by_name.get(name, {})
+        result = result if isinstance(result, dict) else {}
+        region_metrics = [
+            contract.Metric(name="reach", value=result.get("reach"), unit="people", provenance=_PROVENANCE),
+            contract.Metric(name="expansion", value=result.get("expansion"), unit="USD", provenance=_PROVENANCE),
+        ]
+        regions.append(contract.RegionResult(region=name, population=record.get("pop"), audience_size=result.get("reach"), metrics=region_metrics))
+        sources = record.get("sources", {})
+        sources = sources if isinstance(sources, dict) else {}
+        for factor in _FACTORS:
+            citation = sources.get(factor, {})
+            citation = citation if isinstance(citation, dict) else {}
+            assumptions.append(contract.Assumption(key=f"{name}:{factor}", value=record.get(factor), source=citation.get("url")))
+    sensitivity = []
+    tornado = calculated.get("tornado", {})
+    tornado = tornado if isinstance(tornado, dict) else {}
+    for name, bounds in tornado.items():
+        if not isinstance(bounds, dict): continue
+        sensitivity.append(contract.Sensitivity(name=str(name), parameter=str(name), metric="tam_expansion", low=bounds.get("low"), high=bounds.get("high")))
+    warnings = [str(item) for item in _as_list(calculated.get("warnings")) + _as_list(locality_result.get("warnings") if isinstance(locality_result, dict) else None)]
+    partial = bool(calculated.get("tam_partial", calculated.get("total_expansion") is None))
+    if calculated.get("total_expansion") is None and not warnings:
+        warnings.append("tam_partial:no sourced assumptions produced a TAM value")
+    provenance = _as_list(calculated.get("provenance")) + _as_list(locality_result.get("provenance") if isinstance(locality_result, dict) else None)
+    return contract.ReportResult.model_validate({
+        "status": "partial" if partial else "complete", "partial": partial,
+        "results": {"tam": calculated}, "metrics": metrics, "regions": regions,
+        "assumptions": assumptions, "sensitivity": sensitivity, "warnings": warnings,
+        "provenance": provenance,
+    })
