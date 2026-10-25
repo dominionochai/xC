@@ -16,7 +16,9 @@ except ImportError as exc:
     _IMPORT_FAILURES.append(f"backend.src.engine.assemble.run unavailable: {exc}")
 
 try:
-    _contract_module = importlib.import_module("backend.src.contract.assemble")
+    from backend.src.contract import assemble as _contract_assemble
+
+    _contract_module = importlib.import_module("backend.src.contract")
 except ImportError as exc:
     _contract_module = None
     _IMPORT_FAILURES.append(f"backend.src.contract.assemble unavailable: {exc}")
