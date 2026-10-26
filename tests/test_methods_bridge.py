@@ -9,24 +9,25 @@ class BuildBridgeTests(unittest.TestCase):
     @staticmethod
     def _pool():
         # Three distinct categories allow a valid triple under the category rule.
+        # with_a/with_t are numeric affinity scores.
         return [
             {
                 "id": "bridge-a",
                 "category": "category-a",
-                "with_a": "A connects to bridge-a",
-                "with_t": "bridge-a connects to T",
+                "with_a": 0.64,
+                "with_t": 0.64,
             },
             {
                 "id": "bridge-b",
                 "category": "category-b",
-                "with_a": "A connects to bridge-b",
-                "with_t": "bridge-b connects to T",
+                "with_a": 0.64,
+                "with_t": 0.64,
             },
             {
                 "id": "bridge-c",
                 "category": "category-c",
-                "with_a": "A connects to bridge-c",
-                "with_t": "bridge-c connects to T",
+                "with_a": 0.64,
+                "with_t": 0.64,
             },
         ]
 
