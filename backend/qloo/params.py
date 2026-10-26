@@ -110,6 +110,34 @@ def _builder_entries(extra: Mapping[str, Any] | None, name: str) -> list[tuple[s
     return list(extra.items())
 
 
+def _flatten_pairs(entries: list[tuple[str, Any]], array_style: str) -> list[tuple[str, str]]:
+    """Flatten builder entries into query pairs, allowing repeated names.
+
+    Unlike :func:`normalize_params`, insight builders deliberately preserve
+    repeated dotted Qloo field names (for example a second ``filter.type``
+    from the verbatim ``filters`` mapping). Validation and array flattening
+    match ``normalize_params`` minus the uniqueness constraint.
+    """
+    if len(entries) > _MAX_PARAMS:
+        raise ParamError(f"at most {_MAX_PARAMS} parameters are allowed")
+    pairs: list[tuple[str, str]] = []
+    for raw_name, value in entries:
+        name = _parameter_name(raw_name)
+        if isinstance(value, (list, tuple)):
+            if not value:
+                raise ParamError(f"parameter {name!r} must not be an empty array")
+            values = [_scalar_text(item, name) for item in value]
+            if array_style == "comma":
+                pairs.append((name, ",".join(values)))
+            else:
+                pairs.extend((name, item) for item in values)
+        else:
+            pairs.append((name, _scalar_text(value, name)))
+        if len(pairs) > _MAX_PAIRS:
+            raise ParamError(f"at most {_MAX_PAIRS} parameter pairs are allowed")
+    return pairs
+
+
 def build_search_params(
     query: str,
     entity_types: Any = None,
@@ -138,19 +166,22 @@ def build_insights_params(
 ) -> list[tuple[str, str]]:
     """Build insight pairs using Qloo field names in ``filters``/``signals``.
 
-    ``entity_types`` maps to ``filter.type`` unless ``filters`` already carries
-    a ``filter.type`` key, which then wins verbatim. Filter and signal mapping
-    keys are passed through verbatim (for example, ``signal.interests.entities``).
+    ``entity_types`` maps to ``filter.type`` and is emitted first when given.
+    ``filters`` then ``signals`` are passed through verbatim and in order;
+    repeated dotted names (for example a second ``filter.type`` inside
+    ``filters``) are intentionally preserved, matching Qloo's repeated
+    query-parameter semantics for insight fields.
     """
+    if array_style not in {"repeat", "comma"}:
+        raise ParamError("array_style must be 'repeat' or 'comma'")
     entries: list[tuple[str, Any]] = []
-    filter_names = set(filters) if filters is not None else set()
-    if entity_types is not None and "filter.type" not in filter_names:
+    if entity_types is not None:
         entries.append(("filter.type", entity_types))
     if take is not None:
         entries.append(("take", take))
     entries.extend(_builder_entries(filters, "filters"))
     entries.extend(_builder_entries(signals, "signals"))
-    return normalize_params(entries, array_style=array_style)
+    return _flatten_pairs(entries, array_style)
 
 
 def encode_params(pairs: Iterable[tuple[str, Any]]) -> str:
