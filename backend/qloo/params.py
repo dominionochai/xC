@@ -170,7 +170,9 @@ def build_insights_params(
     ``filters`` then ``signals`` are passed through verbatim and in order;
     repeated dotted names (for example a second ``filter.type`` inside
     ``filters``) are intentionally preserved, matching Qloo's repeated
-    query-parameter semantics for insight fields.
+    query-parameter semantics for insight fields. ``take`` is reserved: it may
+    appear at most once across the explicit argument and the verbatim
+    mappings, and a duplicate raises :class:`ParamError`.
     """
     if array_style not in {"repeat", "comma"}:
         raise ParamError("array_style must be 'repeat' or 'comma'")
@@ -181,6 +183,8 @@ def build_insights_params(
         entries.append(("take", take))
     entries.extend(_builder_entries(filters, "filters"))
     entries.extend(_builder_entries(signals, "signals"))
+    if sum(1 for name, _ in entries if name == "take") > 1:
+        raise ParamError("take must be supplied at most once per insights request")
     return _flatten_pairs(entries, array_style)
 
 
