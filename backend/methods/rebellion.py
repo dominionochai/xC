@@ -2,9 +2,55 @@
 
 import math
 import random
+from collections.abc import Mapping
 
 
 CALIBRATION = "NONE - assumptions uncalibrated, see METHODS.md M5"
+
+
+def map_build_communities_to_rebellion(build_output):
+    """Map ``build_communities`` output to rebellion communities.
+
+    Positive ``core_audience_share`` values become records containing the
+    community name, simulation share, and its source ``basis_tags``. The
+    builder normally returns a result mapping with a ``communities`` list;
+    a list of community rows is also accepted directly.
+    """
+    if isinstance(build_output, Mapping):
+        if "communities" in build_output:
+            rows = build_output.get("communities") or []
+        elif "core_audience_share" in build_output:
+            rows = [build_output]
+        else:
+            rows = []
+    elif isinstance(build_output, (list, tuple)):
+        rows = build_output
+    else:
+        rows = []
+
+    mapped = []
+    for index, row in enumerate(rows):
+        if not isinstance(row, Mapping):
+            continue
+        try:
+            share = float(row.get("core_audience_share", 0.0))
+        except (TypeError, ValueError, OverflowError):
+            continue
+        if not math.isfinite(share) or share <= 0.0:
+            continue
+
+        name = row.get("label") or row.get("name") or f"community_{index + 1}"
+        basis_tags = row.get("basis_tags") or []
+        if not isinstance(basis_tags, (list, tuple, set)):
+            basis_tags = []
+        mapped.append(
+            {
+                "name": name,
+                "share": share,
+                "community_tag_sets": list(basis_tags),
+            }
+        )
+    return mapped
 
 
 def _clamp(value, low, high):
