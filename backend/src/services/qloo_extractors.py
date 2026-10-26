@@ -1,9 +1,11 @@
 """Async helpers for extracting culture signals from Qloo.
 
 Callers may pass any async HTTP client implementing :class:`AsyncQlooClient`.
+
 Use :func:`create_qloo_async_client` to create an authenticated ``httpx`` client
 from the repository's existing settings.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -68,6 +70,7 @@ def create_qloo_async_client(**kwargs: object) -> httpx.AsyncClient:
     ``kwargs`` are forwarded to ``httpx.AsyncClient`` (for example a test
     transport or timeout).
     """
+
     api_key = get_settings().qloo_api_key
     if not api_key:
         raise ValueError("QLOO_API_KEY is required to create a Qloo client")
@@ -87,6 +90,7 @@ def _clean_string(value: object) -> str | None:
 def _extract_entity_id(item: object) -> str | None:
     if not isinstance(item, Mapping):
         return None
+
     candidates: list[object] = [item.get("entity_id"), item.get("id")]
     nested = item.get("entity")
     if isinstance(nested, Mapping):
@@ -104,9 +108,11 @@ async def resolve_qloo_entity_id(
     ``types`` is sent as a comma-separated list of entity URNs. Returns ``None``
     when Qloo has no usable result; HTTP status errors are propagated unchanged.
     """
+
     query = _clean_string(entity_name)
     if query is None:
         raise ValueError("entity_name must be a non-empty string")
+
     normalized_types = tuple(
         sorted({cleaned for value in types if (cleaned := _clean_string(value))})
     )
@@ -121,15 +127,18 @@ async def resolve_qloo_entity_id(
     payload = response.json()
     if not isinstance(payload, Mapping):
         raise ValueError("Qloo search response must be a JSON object")
+
     results = payload.get("results", [])
     if not isinstance(results, list):
         raise ValueError("Qloo search results must be a JSON array")
+
     return next((entity_id for item in results if (entity_id := _extract_entity_id(item))), None)
 
 
 def _normalized_tastes(payload: object) -> list[TasteSignal]:
     if not isinstance(payload, Mapping):
         raise ValueError("Qloo insights response must be a JSON object")
+
     results = payload.get("results", [])
     if not isinstance(results, list):
         raise ValueError("Qloo insights results must be a JSON array")
@@ -138,6 +147,7 @@ def _normalized_tastes(payload: object) -> list[TasteSignal]:
     for item in results:
         if not isinstance(item, Mapping):
             continue
+
         nested = item.get("entity")
         entity = nested if isinstance(nested, Mapping) else item
         entity_id = _clean_string(entity.get("id")) or _clean_string(entity.get("entity_id"))
@@ -147,9 +157,11 @@ def _normalized_tastes(payload: object) -> list[TasteSignal]:
         if entity_id is None:
             continue
         name = name or entity_id
+
         # If a malformed response repeats an id with different labels, choose
         # deterministically rather than depending on response ordering.
         by_id[entity_id] = min(by_id.get(entity_id, name), name)
+
     return [{"id": entity_id, "name": by_id[entity_id]} for entity_id in sorted(by_id)]
 
 
@@ -162,9 +174,11 @@ async def fetch_entity_tastes(
     set to ``urn:tag``, and ``take=50``. Returns tags sorted and deduplicated by
     ID; HTTP status errors propagate to the caller.
     """
+
     clean_id = _clean_string(entity_id)
     if clean_id is None:
         raise ValueError("entity_id must be a non-empty string")
+
     response = await client.get(
         f"{QLOO_BASE_URL}/v2/insights",
         params={
@@ -187,6 +201,7 @@ async def fetch_term_tastes(
     Returns an empty list when the term cannot be resolved; otherwise returns
     the normalized, deterministic tag list from :func:`fetch_entity_tastes`.
     """
+
     entity_id = await resolve_qloo_entity_id(client, term, types=types)
     if entity_id is None:
         return []
@@ -208,12 +223,14 @@ async def compare_brand_cultures(
     lists of normalized tag objects. Both insights requests are issued
     concurrently; HTTP errors are propagated.
     """
+
     first, second = await asyncio.gather(
         fetch_entity_tastes(client, first_brand_id),
         fetch_entity_tastes(client, second_brand_id),
     )
     first_by_id, second_by_id = _taste_index(first), _taste_index(second)
     first_ids, second_ids = set(first_by_id), set(second_by_id)
+
     return {
         "shared": [first_by_id[key] for key in sorted(first_ids & second_ids)],
         "first_only": [first_by_id[key] for key in sorted(first_ids - second_ids)],
@@ -231,20 +248,16 @@ async def expand_persona_and_tam_signals(
     Each group is fetched concurrently. Tags are unioned by ID and sorted, so
     output does not depend on request completion or input order.
     """
+
     async def expand(entity_ids: Sequence[str]) -> list[TasteSignal]:
         groups = await asyncio.gather(
             *(fetch_entity_tastes(client, entity_id) for entity_id in entity_ids)
         )
-        return [
-            merged[key]
-            for key in sorted(
-                merged := {
-                    taste["id"]: taste
-                    for group in groups
-                    for taste in group
-                }
-            )
-        ]
+        merged: dict[str, TasteSignal] = {}
+        for group in groups:
+            for taste in group:
+                merged[taste["id"]] = taste
+        return [merged[key] for key in sorted(merged)]
 
     persona, tam = await asyncio.gather(
         expand(persona_entity_ids), expand(tam_entity_ids)
