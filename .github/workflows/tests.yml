@@ -8,4 +8,4 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - run: pip install pydantic
-      - run: python -m unittest tests.test_bridge_adapter tests.test_methods_bridge tests.test_locality_adapter tests.test_methods_locality -v
+      - run: python -m unittest tests.test_qloo_client tests.test_qloo_params tests.test_qloo_normalize tests.test_qloo_extractors tests.test_qloo_service -v
