@@ -138,11 +138,13 @@ def build_insights_params(
 ) -> list[tuple[str, str]]:
     """Build insight pairs using Qloo field names in ``filters``/``signals``.
 
-    ``entity_types`` maps to ``filter.type``. Filter and signal mapping keys
-    are passed through verbatim (for example, ``signal.interests.entities``).
+    ``entity_types`` maps to ``filter.type`` unless ``filters`` already carries
+    a ``filter.type`` key, which then wins verbatim. Filter and signal mapping
+    keys are passed through verbatim (for example, ``signal.interests.entities``).
     """
     entries: list[tuple[str, Any]] = []
-    if entity_types is not None:
+    filter_names = set(filters) if filters is not None else set()
+    if entity_types is not None and "filter.type" not in filter_names:
         entries.append(("filter.type", entity_types))
     if take is not None:
         entries.append(("take", take))

@@ -68,11 +68,15 @@ def is_suspect_empty(payload: Any) -> bool:
     """Flag missing or empty ``results`` as suspicious, not as an API failure.
 
     Empty results can be legitimate; this is deliberately a diagnostic signal.
+    Payloads that are not mappings or lists, and mappings without a ``results``
+    key, are NOT flagged: those shapes are treated as non-diagnostic.
     """
     if isinstance(payload, list):
         return not payload
-    if not isinstance(payload, Mapping) or "results" not in payload:
-        return True
+    if not isinstance(payload, Mapping):
+        return False
+    if "results" not in payload:
+        return False
     results = payload.get("results")
     if isinstance(results, list):
         return not results
@@ -95,7 +99,8 @@ def shape_paths(payload: Any) -> list[str]:
 
     Mapping keys are joined with dots and list contents use ``[]`` instead of
     numeric indexes, so equivalent payload shapes produce equivalent paths.
-    Non-container values are treated as leaves.
+    Paths start with ``$`` (JSONPath-style root marker). Non-container values
+    are treated as leaves.
     """
     paths: list[str] = []
     seen: set[str] = set()
@@ -109,14 +114,14 @@ def shape_paths(payload: Any) -> list[str]:
         if isinstance(value, Mapping):
             for key in value:
                 part = str(key)
-                child = f"{path}.{part}" if path else part
+                child = f"{path}.{part}" if path else f"$.{part}"
                 add(child)
                 visit(value[key], child)
         elif isinstance(value, list):
-            marker = f"{path}[]" if path else "[]"
+            marker = f"{path}[]" if path else "$[]"
             add(marker)
             for item in value:
                 visit(item, marker)
 
-    visit(payload, "")
+    visit(payload, "$" )
     return paths

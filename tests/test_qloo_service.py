@@ -20,6 +20,7 @@ class FakeResponse:
 
 
 class FakeTransport:
+    """Route values are either {status, body} dicts or callables(params)->dict."""
     def __init__(self, routes):
         self.routes = routes
         self.calls = []
@@ -27,6 +28,8 @@ class FakeTransport:
     def get(self, url, *, params, headers, timeout):
         self.calls.append({"url": url, "params": dict(params), "headers": dict(headers)})
         route = self.routes.get(url[len(BASE):])
+        if callable(route):
+            route = route(params)
         return FakeResponse(route["status"], route["body"])
 
 
@@ -64,8 +67,12 @@ class QlooServiceTests(unittest.TestCase):
         self.assertEqual(sent["params"]["filter.type"], "urn:tag")
 
     def test_affinity_pair_jaccard_overlap(self):
-        transport = FakeTransport({"/v2/insights": _payload(**TAGS_A)})
-        transport.routes["/v2/insights"] = {"status": 200, "body": json.dumps(TAGS_B).encode("utf-8")}
+        state = {"n": 0}
+        def handler(params):
+            state["n"] += 1
+            body = TAGS_A if state["n"] == 1 else TAGS_B
+            return {"status": 200, "body": json.dumps(body).encode("utf-8")}
+        transport = FakeTransport({"/v2/insights": handler})
         service = QlooService(_client(transport))
         result = service.affinity_pair("urn:brand:a", "urn:brand:b")
         self.assertEqual(result["data"]["overlap"], 0.5)
