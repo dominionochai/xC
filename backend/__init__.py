@@ -28,44 +28,46 @@ if not getattr(_original_root_validator, "_xc_compat", False):
     _pydantic.root_validator = _root_validator
 
 # --- Validation errors must never echo the request body --------------------
-# FastAPI's default ``RequestValidationError`` handler includes the offending
-# input in each error dict. That reflects whatever the client submitted,
-# including secrets such as a Qloo API key, back in the 422 response body and
-# into any log that records responses. Strip ``input`` (and ``ctx``, which can
-# hold submitted values) before the response is serialised.
+# FastAPI's default ``RequestValidationError`` handler puts the offending input
+# in each error dict, so whatever a client submitted - including secrets such as
+# a Qloo API key - is reflected in the 422 response body and in any log that
+# records responses. Rebuild the error list without ``input`` and ``ctx``.
 #
-# The handler is patched here, in the package initialiser, because
-# ``backend/app.py`` builds its ``FastAPI`` instance at import time and copies
-# the handler reference from this module when it does so.
-import fastapi.exception_handlers as _fastapi_handlers
+# This is applied by wrapping ``FastAPI.__init__`` rather than by reassigning
+# ``fastapi.exception_handlers.request_validation_exception_handler``: the
+# applications module binds that handler by name at import time and copies the
+# original into each app's handler map when the app is constructed, so patching
+# the source module alone has no effect on apps created afterwards.
+import fastapi as _fastapi
+import fastapi.applications as _fastapi_applications
+from fastapi.exceptions import RequestValidationError as _RequestValidationError
+from fastapi.responses import JSONResponse as _JSONResponse
 
-_original_request_validation_handler = (
-    _fastapi_handlers.request_validation_exception_handler
+
+async def _redacted_request_validation_handler(request, exc):
+    errors = []
+    for error in exc.errors():
+        error = dict(error)
+        error.pop("input", None)
+        error.pop("ctx", None)
+        errors.append(error)
+    return _JSONResponse(status_code=422, content={"detail": errors})
+
+
+_original_fastapi_init = _fastapi.FastAPI.__init__
+
+if not getattr(_original_fastapi_init, "_xc_redacted", False):
+
+    def _patched_fastapi_init(self, *args, **kwargs):
+        _original_fastapi_init(self, *args, **kwargs)
+        self.exception_handlers[_RequestValidationError] = (
+            _redacted_request_validation_handler
+        )
+
+    _patched_fastapi_init._xc_redacted = True
+    _fastapi.FastAPI.__init__ = _patched_fastapi_init
+
+# Also rebind the by-name references, for any code path that reads them.
+_fastapi_applications.request_validation_exception_handler = (
+    _redacted_request_validation_handler
 )
-
-if not getattr(_original_request_validation_handler, "_xc_redacted", False):
-
-    async def _redacted_request_validation_handler(request, exc):
-        response = await _original_request_validation_handler(request, exc)
-        body = getattr(response, "body", None)
-        if body:
-            import json as _json
-
-            try:
-                payload = _json.loads(body)
-            except (TypeError, ValueError):
-                return response
-            for error in payload.get("detail", []):
-                if isinstance(error, dict):
-                    error.pop("input", None)
-                    error.pop("ctx", None)
-            response.body = _json.dumps(payload).encode("utf-8")
-            headers = getattr(response, "headers", None)
-            if headers is not None:
-                headers["content-length"] = str(len(response.body))
-        return response
-
-    _redacted_request_validation_handler._xc_redacted = True
-    _fastapi_handlers.request_validation_exception_handler = (
-        _redacted_request_validation_handler
-    )
