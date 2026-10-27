@@ -1,5 +1,7 @@
 # Qloo capabilities — unprobed template
 
+Status: Current tests are offline/mock only: client API-key handling, pacing/retries, and budget/cache; parameter construction/validation; and extractors exercised with mocked responses. The real/live Qloo endpoint was not probed, so live-dependent rows below remain hypotheses and are unverified.
+
 > All entries below are **not yet probed**. After a probe, Verdict must be one of `works`, `ignored`, `error`, or `ambiguous`. Do not include concrete values or raw data.
 
 ## P1 — not yet probed
@@ -55,12 +57,12 @@
 ## P11 — not yet probed
 | Verdict | Working parameter forms | Shape summary |
 |---|---|---|
-|  | not yet probed | not yet probed |
+|  |  not yet probed | not yet probed |
 
 ## P12 — not yet probed
 | Verdict | Working parameter forms | Shape summary |
 |---|---|---|
-|  | not yet probed | not yet probed |
+|  |  not yet probed | not yet probed |
 
 ## P13 — not yet probed
 | Verdict | Working parameter forms | Shape summary |
