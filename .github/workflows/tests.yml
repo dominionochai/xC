@@ -16,6 +16,7 @@ jobs:
           python -m pytest tests/test_p8_api.py -x -q --no-header 2>&1 | tail -n 80
       - run: python -m pytest tests -q --tb=long -p no:cacheprovider
       - name: Suite focus
+        if: always()
         continue-on-error: true
         run: |
           python -m pytest tests -q --no-header -p no:cacheprovider 2>&1 | grep -E "^(FAILED|ERROR)" | head -n 60
