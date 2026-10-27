@@ -1,124 +1,76 @@
-IiIiR2F0ZWQgcGhhc2UgcnVubmVyIGFuZCBkZXRlcm1pbmlzdGljIHhD
-b3JjaGVzdHJhdGlvbi4iIiIKZnJvbSBfX2Z1dHVyZV9fIGltcG9ydCBhbm5v
-dGF0aW9ucwpmcm9tIHR5cGluZyBpbXBvcnQgQW55CmZyb20gLi4uYW5hbHl0
-aWNzIGltcG9ydCBhZmZpbml0eV9jbGFzaCwgYWZmaW5pdHlfZ3JhcGgsIGRv
-bGxhcml6ZWRfdGFtLCBmaW5kX3RyYW5zaXRpb25fYnJpZGdlLCBnZW9ncmFw
-aGljX21hcmtldF9zcGxpdApmcm9tIC4uLnNlcnZpY2VzLnByZXNldHMgaW1w
-b3J0IGdldF9wcmVzZXQKZnJvbSAuZ2F0ZXMgaW1wb3J0IGdhdGVfYWR2ZXJz
-YXJpYWxfcmV2aWV3LCBnYXRlX2N1bHR1cmFsX2FuYWx5c2lzLCBnYXRlX2lu
-cHV0LCBnYXRlX3Fsb29fZXh0cmFjdGlvbiwgZ2F0ZV9yZXBvcnQKZnJvbSAu
-c2Vzc2lvbiBpbXBvcnQgUEhBU0VfT1JERVIsIFhjTW9kZWxTZXNzaW9uCmZy
-b20gLnR5cGVzIGltcG9ydCBBbmFseXNpc1BoYXNlLCBBbmFseXNpc1BoYXNl
-UmVzdWx0LCBBbmFseXNpc1BsYW4sIEFuYWx5c3RSZXZpZXcsIFJlc2VhcmNo
-RXhlY3V0aW9uUmVzdWx0cywgWGNSdW5SZXN1bHQKCmNsYXNzIFBoYXNlUm9s
-ZVJ1bm5lcjoKICAgICJfX0V4ZWN1dGVzIGEgY29uY3JldGUgZGV0ZXJtaW5p
-c3RpYyByb2xlIGZvciBlYWNoIGFuYWx5c2lzIHBoYXNlLiIiIgogICAgZGVm
-IHJ1bl9waGFzZShzZWxmLCBwaGFzZTogQW5hbHlzaXNQaGFzZSwgc2Vzc2lv
-bjogWGNNb2RlbFNlc3Npb24pIC0+IEFuYWx5c2lzUGhhc2VSZXN1bHQ6CiAg
-ICAgICAgcGxhbiA9IHNlc3Npb24ucGxhbgogICAgICAgIGlmIHBoYXNlIGlz
-IEFuYWx5c2lzUGhhc2UuSU5UQUtFOgogICAgICAgICAgICBkYXRhOiBkaWN0
-W3N0ciwgQW55XSA9IHsic291cmNlX2VudGl0eV9pZCI6IHBsYW4uc291cmNl
-X2VudGl0eV9pZCwgImNvbXBhcmlzb25fZW50aXR5X2lkIjogcGxhbi5jb21w
-YXJpc29uX2VudGl0eV9pZCwgImVudGl0eV90eXBlIjogcGxhbi5lbnRpdHlf
-dHlwZSwgInByZXNldCI6IGdldF9wcmVzZXQocGxhbi5wcmVzZXRfaWQpfQog
-ICAgICAgIGVsaWYgcGhhc2UgaXMgQW5hbHlzaXNQaGFzZS5RTE9PX0VYVFJB
-Q1RJT046CiAgICAgICAgICAgIGRhdGEgPSB7InNvdXJjZV9hZmZpbml0aWVz
-IjogbGlzdChzZXNzaW9uLnJlc2VhcmNoLnNvdXJjZV9hZmZpbml0aWVzKSwg
-ImNvbXBhcmlzb25fYWZmaW5pdGllcyI6IGxpc3Qoc2Vzc2lvbi5yZXNlYXJj
-aC5jb21wYXJpc29uX2FmZmluaXRpZXMpLCAic291cmNlX2NvdW50IjogbGVu
-KHNlc3Npb24ucmVzZWFyY2guc291cmNlX2FmZmluaXRpZXMpLCAiY29tcGFy
-aXNvbl9jb3VudCI6IGxlbihzZXNzaW9uLnJlc2VhcmNoLmNvbXBhcmlzb25f
-YWZmaW5pdGllcykpfQogICAgICAgIGVsaWYgcGhhc2UgaXMgQW5hbHlzaXNQ
-aGFzZS5DVUxUVVJBTF9BTkFMWVNJUzoKICAgICAgICAgICAgc291cmNlLCB0
-YXJnZXQgPSBzZXNzaW9uLnJlc2VhcmNoLnNvdXJjZV9hZmZpbml0aWVzLCBz
-ZXNzaW9uLnJlc2VhcmNoLmNvbXBhcmlzb25fYWZmaW5pdGllcwogICAgICAg
-ICAgICBncmFwaCA9IGFmZmluaXR5X2dyYXBoKHBsYW4uc291cmNlX2VudGl0
-eV9pZCwgcGxhbi5jb21wYXJpc29uX2VudGl0eV9pZCwgc291cmNlLCB0YXJn
-ZXQpCiAgICAgICAgICAgIGNsYXNoID0gYWZmaW5pdHlfY2xhc2goc291cmNl
-LCB0YXJnZXQpCiAgICAgICAgICAgIHJpc2sgPSBjbGFzaFsicmlzayJdCiAg
-ICAgICAgICAgIGRhdGEgPSB7CiAgICAgICAgICAgICAgICAiYWZmaW5pdHki
-OiBjbGFzaCwKICAgICAgICAgICAgICAgICJ0cmFuc2l0aW9uX2JyaWRnZSI6
-IGZpbmRfdHJhbnNpdGlvbl9icmlkZ2UocGxhbi5zb3VyY2VfZW50aXR5X2lk
-LCBwbGFuLmNvbXBhcmlzb25fZW50aXR5X2lkLCBncmFwaCwgbWF4X2hvcHM9
-MyksCiAgICAgICAgICAgICAgICAiZ2VvZ3JhcGhpY19tYXJrZXRfc3BsaXQi
-OiBnZW9ncmFwaGljX21hcmtldF9zcGxpdChwbGFuLnJlZ2lvbnMpLAogICAg
-ICAgICAgICAgICAgInRhbSI6IGRvbGxhcml6ZWRfdGFtKHN1bShwbGFuLnJl
-Z2lvbnMudmFsdWVzKCkpLCBwbGFuLmFubnVhbF9zcGVuZF9wZXJfcGVyc29u
-KSwKICAgICAgICAgICAgICAgICJmYW5iYWNrbGFzaF9yaXNrIjogeyJyaXNr
-IjogcmlzaywgInNjb3JlIjogY2xhc2hbImNsYXNoX3Njb3JlIl0gaWYgcmlz
-ayAhPSAidW5rbm93biIgZWxzZSBOb25lLCAibWV0aG9kIjogImphY2NhcmQt
-YWZmaW5pdHktY2xhc3MtdjEiLCAic2hhcmVkX2VudGl0aWVzIjogbGVuKGNs
-YXNoWyJzaGFyZWRfZW50aXRpZXMiXSksICJhZmZpbml0eV9vdmVybGFwIjog
-Y2xhc2hbImphY2NhcmRfc2ltaWxhcml0eSJdLCAiaW50ZXJwcmV0YXRpb24i
-OiAiRGlyZWN0aW9uYWwgYWZmaW5pdHktYmFzZWQgcHJveHk7IHZhbGlkYXRl
-IHdpdGggYXVkaWVuY2UgcmVzZWFyY2guIn0sCiAgICAgICAgICAgIH0KICAg
-ICAgICBlbGlmIHBoYXNlIGlzIEFuYWx5c2lzUGhhc2UuQURWRVJTQVJJQUxf
-UkVWSUVXOgogICAgICAgICAgICByaXNrID0gc2Vzc2lvbi5vdXRwdXRfZm9y
-KEFuYWx5c2lzUGhhc2UuQ1VMVFVSQUxfQU5BTFlTSVMpWyJmYW5iYWNrbGFz
-aF9yaXNrIl1bInJpc2siXQogICAgICAgICAgICBmaW5kaW5ncywgcmVjb21t
-ZW5kYXRpb25zID0gW10sIFtdCiAgICAgICAgICAgIGlmIHJpc2sgPT0gInVu
-a25vd24iOgogICAgICAgICAgICAgICAgZmluZGluZ3MuYXBwZW5kKCJBZmZp
-bml0eSBjb3ZlcmFnZSBpcyBpbnN1ZmZpY2llbnQgdG8gZXN0aW1hdGUgZmFu
-YmFja2xhc2ggcmlzay4iKQogICAgICAgICAgICAgICAgcmVjb21tZW5kYXRp
-b25zLmFwcGVuZCgiVmFsaWRhdGUgY3VsdHVyYWwgZml0IHdpdGggbG9jYWwg
-aWVuY2UgcmVzZWFyY2ggYmVmb3JlIGxhdW5jaC4iKQogICAgICAgICAgICBl
-bGlmIHJpc2sgPT0gImhpZ2giOgogICAgICAgICAgICAgICAgZmluZGluZ3Mu
-YXBwZW5kKCJMb3cgYWZmaW5pdHkgb3ZlcmxhcCBwcm9kdWNlcyBhIGhpZ2gg
-ZGV0ZXJtaW5pc3RpYyBmYW5iYWNrbGFzaCBwcm94eS4iKQogICAgICAgICAg
-ICAgICAgcmVjb21tZW5kYXRpb25zLmFwcGVuZCgiVGVzdCBwb3NpdGlvbmlu
-ZyB3aXRoIGV4aXN0aW5nIGZhbnMgYW5kIHByZXBhcmUgYSBtaXRpZ2F0aW9u
-IHBsYW4uIikKICAgICAgICAgICAgZWxpZiByaXNrID09ICJtZWRpdW0iOgog
-ICAgICAgICAgICAgICAgZmluZGluZ3MuYXBwZW5kKCJBZmZpbml0eSBvdmVy
-bGFwIGluZGljYXRlcyBhIG1vZGVyYXRlIGN1bHR1cmFsLWNsYXNoIHByb3h5
-LiIpCiAgICAgICAgICAgICAgICByZWNvbW1lbmRhdGlvbnMuYXBwZW5kKCJS
-dW4gYSB0YXJnZXRlZCBjb25jZXB0IHRlc3QgaW4gcHJpb3JpdHkgcmVnaW9u
-cy4iKQogICAgICAgICAgICBlbHNlOgogICAgICAgICAgICAgICAgZmluZGlu
-Z3MuYXBwZW5kKCJBZmZpbml0eSBvdmVybGFwIGluZGljYXRlcyBhIGxvdyBj
-dWx0dXJhbC1jbGFzaCBwcm94eS4iKQogICAgICAgICAgICAgICAgcmVjb21t
-ZW5kYXRpb25zLmFwcGVuZCgiQ29udGludWUgbW9uaXRvcmluZyBhdWRpZW5j
-ZSByZXNwb25zZSBhZnRlciBsYXVuY2guIikKICAgICAgICAgICAgZGF0YSA9
-IHsiYXBwcm92ZWQiOiBUcnVlLCAicmlza19sZXZlbCI6IHJpc2ssICJmaW5k
-aW5ncyI6IGZpbmRpbmdzLCAicmVjb21tZW5kYXRpb25zIjogcmVjb21tZW5k
-YXRpb25zfQogICAgICAgIGVsaWYgcGhhc2UgaXMgQW5hbHlzaXNQaGFzZS5Y
-Q19SRVBPUlQ6CiAgICAgICAgICAgIGRhdGEgPSB7a2V5OiBzZXNzaW9uLm91
-dHB1dF9mb3IoQW5hbHlzaXNQaGFzZS5DVUxUVVJBTF9BTkFMWVNJUylba2V5
-XSBmb3Iga2V5IGluICgiYWZmaW5pdHkiLCAidHJhbnNpdGlvbl9icmlkZ2Ui
-LCAiZ2VvZ3JhcGhpY19tYXJrZXRfc3BsaXQiLCAidGFtIiwgImZhbmJhY2ts
-YXNoX3Jpc2siKX0KICAgICAgICBlbHNlOgogICAgICAgICAgICByYWlzZSBW
-YWx1ZUVycm9yKGYidW5zdXBwb3J0ZWQgYW5hbHlzaXMgcGhhc2U6IHtwaGFz
-ZX0iKQogICAgICAgIHJldHVybiBBbmFseXNpc1BoYXNlUmVzdWx0KHBoYXNl
-PXBoYXNlLCBzdGF0dXM9ImNvbXBsZXRlIiwgZGF0YT1kYXRhKQoKY2xhc3Mg
-WGNPcmNoZXN0cmF0b3I6CiAgICAiIiJSdW4gZml2ZSBnYXRlZCBwaGFzZXMg
-YW5kIHByZXNlcnZlIGlucHV0IHJlcG9ydCBmaWVsZHMgYXQgdG9wIGxldmVs
-LiIiIgogICAgZGVmIF9faW5pdF9fKHNlbGYsIHJ1bm5lcjogUGhhc2VSb2xl
-UnVubmVyIHwgTm9uZSA9IE5vbmUpIC0+IE5vbmU6CiAgICAgICAgc2VsZi5y
-dW5uZXIgPSBydW5uZXIgb3IgUGhhc2VSb2xlUnVubmVyKCkKICAgIGRlZiBy
-dW4oc2VsZiwgcGxhbjogQW5hbHlzaXNQbGFuLCByZXNlYXJjaDogUmVzZWFy
-Y2hFeGVjdXRpb25SZXN1bHRzKSAtPiBY Y1J1blJlc3VsdDoKICAgICAgICBn
-YXRlX2lucHV0KHBsYW4pCiAgICAgICAgc2Vzc2lvbiA9IFhjTW9kZWxTZXNz
-aW9uKHBsYW4sIHJlc2VhcmNoKQogICAgICAgIHJldmlldzogQW5hbHlzdFJl
-dmlldyB8IE5vbmUgPSBOb25lCiAgICAgICAgcmVwb3J0OiBkaWN0W3N0ciwg
-QW55XSB8IE5vbmUgPSBOb25lCiAgICAgICAgZm9yIHBoYXNlIGluIFBIQVNF
-X09SREVSOgogICAgICAgICAgICByZXN1bHQgPSBzZWxmLnJ1bm5lci5ydW5f
-cGhhc2UocGhhc2UsIHNlc3Npb24pCiAgICAgICAgICAgIGlmIHBoYXNlIGlz
-IEFuYWx5c2lzUGhhc2UuUUxPT19FWFRSQUNUSU9OOgogICAgICAgICAgICAg
-ICAgZ2F0ZV9xbG9vX2V4dHJhY3Rpb24ocmVzZWFyY2gpCiAgICAgICAgICAg
-IGVsaWYgcGhhc2UgaXMgQW5hbHlzaXNQaGFzZS5DVUxUVVJBTF9BTkFMWVNJ
-UzoKICAgICAgICAgICAgICAgIGdhdGVfY3VsdHVyYWxfYW5hbHlzaXMocmVz
-dWx0KQogICAgICAgICAgICBlbGlmIHBoYXNlIGlzIEFuYWx5c2lzUGhhc2Uu
-QURWRVJTQVJJQUxfUkVWSUVXOgogICAgICAgICAgICAgICAgcmV2aWV3ID0g
-QW5hbHlzdFJldmlldyh ib29sKHJlc3VsdC5kYXRhLmdldCgiYXBwcm92ZWQi
-KSksIHN0cihyZXN1bHQuZGF0YS5nZXQoInJpc2tfbGV2ZWwiLCAidW5rbm93
-biIpKSwgdHVwbGUocmVzdWx0LmRhdGEuZ2V0KCJmaW5kaW5ncyIsICgpKSks
-IHR1cGxlKHJlc3VsdC5kYXRhLmdldCgicmVjb21tZW5kYXRpb25zIiwgKCkp
-KSkKICAgICAgICAgICAgICAgIGdhdGVfYWR2ZXJzYXJpYWxfcmV2aWV3KHJl
-dmlldykKICAgICAgICAgICAgZWxpZiBwaGFzZSBpcyBBbmFseXNpc1BoYXNl
-LlhDX1JFUE9SVDoKICAgICAgICAgICAgICAgIGdhdGVfcmVwb3J0KHJlc3Vs
-dC5kYXRhKQogICAgICAgICAgICAgICAgcmVwb3J0ID0gZGljdChyZXN1bHQu
-ZGF0YSkKICAgICAgICAgICAgc2Vzc2lvbi5yZWNvcmQocmVzdWx0KQogICAg
-ICAgIGlmIHJldmlldyBpcyBOb25lIG9yIHJlcG9ydCBpcyBOb25lOgogICAg
-ICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoIm9yY2hlc3RyYXRpb24gY29t
-cGxldGVkIHdpdGhvdXQgYSByZXZpZXdlZCByZXBvcnQiKQogICAgICAgIHJl
-dHVybiBYY1J1blJlc3VsdChzZXNzaW9uLnJ1bl9pZCwgcGxhbi5wcmVzZXRf
-aWQsIHJlcG9ydCwgdHVwbGUoc2Vzc2lvbi5waGFzZV9yZXN1bHRzKSwgcmV2
-aWV3KQo=
+"""Gated phase runner and deterministic xC orchestration."""
+from __future__ import annotations
+from typing import Any
+from ...analytics import affinity_class, affinity_graph, dollarized_tam, find_transition_bridge, geographic_market_split
+from ...services.presets import get_preset
+from .gates import gate_adversarial_review, gate_cultural_analysis, gate_input, gate_qloo_extraction, gate_report
+from .session import PHASE_ORDER, XcModelSession
+from .types import AnalysisPhase, AnalysisPhaseResult, AnalysisPlan, AnalystReview, ResearchExecutionResults, XcRunResult
+
+class PhaseRoleRunner:
+    """Executes a concrete deterministic role for each analysis phase."""
+    def run_phase(self, phase: AnalysisPhase, session: XcModelSession) -> AnalysisPhaseResult:
+        plan = session.plan
+        if phase is AnalysisPhase.INTAKE:
+            data: dict[str, Any] = {"source_entity_id": plan.source_entity_id, "comparison_entity_id": plan.comparison_entity_id, "entity_type": plan.entity_type, "preset": get_preset(plan.preset_id)}
+        elif phase is AnalysisPhase.QLOO_EXTRACTION:
+            data = {"source_affinities": list(session.research.source_affinities), "comparison_affinities": list(session.research.comparison_affinities), "source_count": len(session.research.source_affinities), "comparison_count": len(session.research.comparison_affinities)}
+        elif phase is AnalysisPhase.CULTURAL_ANALYSIS:
+            source, target = session.research.source_affinities, session.research.comparison_affinities
+            graph = affinity_graph(plan.source_entity_id, plan.comparison_entity_id, source, target)
+            clash = affinity_class(source, target)
+            risk = clash["risk"]
+            data = {
+                "affinity": clash,
+                "transition_bridge": find_transition_bridge(plan.source_entity_id, plan.comparison_entity_id, graph, max_hops=3),
+                "geographic_market_split": geographic_market_split(plan.regions),
+                "tam": dollarized_tam(sum(plan.regions.values()), plan.annual_spend_per_person),
+                "fanbacklash_risk": {"risk": risk, "score": clash["clash_score"] if risk != "unknown" else None, "method": "jaccard-affinity-class-v1", "shared_entities": len(clash["shared_entities"]), "affinity_overlap": clash["jaccard_similarity"], "interpretation": "Directional affinity-based proxy; validate with audience research."},
+            }
+        elif phase is AnalysisPhase.ADVERSARIAL_REVIEW:
+            risk = session.output_for(AnalysisPhase.CULTURAL_ANALYSIS)["fanbacklash_risk"]["risk"]
+            findings, recommendations = [], []
+            if risk == "unknown":
+                findings.append("Affinity coverage is insufficient to estimate fanbacklash risk.")
+                recommendations.append("Validate cultural fit with local audience research before launch.")
+            elif risk == "high":
+                findings.append("Low affinity overlap produces a high deterministic fanbacklash proxy.")
+                recommendations.append("Test positioning with existing fans and prepare a mitigation plan.")
+            elif risk == "medium":
+                findings.append("Affinity overlap indicates a moderate cultural-clash proxy.")
+                recommendations.append("Run a targeted concept test in priority regions.")
+            else:
+                findings.append("Affinity overlap indicates a low cultural-clash proxy.")
+                recommendations.append("Continue monitoring audience response after launch.")
+            data = {"approved": True, "risk_level": risk, "findings": findings, "recommendations": recommendations}
+        elif phase is AnalysisPhase.XC_REPORT:
+            data = {key: session.output_for(AnalysisPhase.CULTURAL_ANALYSIS)[key] for key in ("affinity", "transition_bridge", "geographic_market_split", "tam", "fanbacklash_risk")}
+        else:
+            raise ValueError(f"unsupported analysis phase: {phase}")
+        return AnalysisPhaseResult(phase=phase, status="complete", data=data)
+
+class XcOrchestrator:
+    """Run five gated phases and preserve input report fields at top level."""
+    def __init__(self, runner: PhaseRoleRunner | None = None) -> None:
+        self.runner = runner or PhaseRoleRunner()
+    def run(self, plan: AnalysisPlan, research: ResearchExecutionResults) -> XcRunResult:
+        gate_input(plan)
+        session = XcModelSession(plan, research)
+        review: AnalystReview | None = None
+        report: dict[str, Any] | None = None
+        for phase in PHASE_ORDER:
+            result = self.runner.run_phase(phase, session)
+            if phase is AnalysisPhase.QLOO_EXTRACTION:
+                gate_qloo_extraction(research)
+            elif phase is AnalysisPhase.CULTURAL_ANALYSIS:
+                gate_cultural_analysis(result)
+            elif phase is AnalysisPhase.ADVERSARIAL_REVIEW:
+                review = AnalystReview(bool(result.data.get("approved")), str(result.data.get("risk_level", "unknown")), tuple(result.data.get("findings", ())), tuple(result.data.get("recommendations", ())))
+                gate_adversarial_review(review)
+            elif phase is AnalysisPhase.XC_REPORT:
+                gate_report(result.data)
+                report = dict(result.data)
+            session.record(result)
+        if review is None or report is None:
+            raise RuntimeError("orchestration completed without a reviewed report")
+        return XcRunResult(session.run_id, plan.preset_id, report, tuple(session.phase_results), review)
