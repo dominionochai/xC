@@ -1,0 +1,21 @@
+{
+  "synthetic": true,
+  "label": "Synthetic fixture only; not live/API data.",
+  "results": [
+    {
+      "id": "synthetic-trend-001",
+      "name": "Neighborhood Food Markets",
+      "type": "urn:tag",
+      "score": 0.68,
+      "trend": {
+        "direction": "up",
+        "change": 0.12
+      },
+      "entity": {
+        "id": "synthetic-region-001",
+        "name": "Example District",
+        "type": "urn:entity:place"
+      }
+    }
+  ]
+}

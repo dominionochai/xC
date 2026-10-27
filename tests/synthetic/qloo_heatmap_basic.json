@@ -1,0 +1,32 @@
+{
+  "synthetic": true,
+  "label": "Synthetic fixture only; not live/API data.",
+  "results": [
+    {
+      "row": "Synthetic audience A",
+      "cells": [
+        {
+          "column": "Independent cinema",
+          "score": 0.76
+        },
+        {
+          "column": "Local cafes",
+          "score": 0.58
+        }
+      ]
+    },
+    {
+      "row": "Synthetic audience B",
+      "cells": [
+        {
+          "column": "Independent cinema",
+          "score": 0.63
+        },
+        {
+          "column": "Local cafes",
+          "score": 0.81
+        }
+      ]
+    }
+  ]
+}

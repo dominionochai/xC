@@ -1,0 +1,26 @@
+{
+  "synthetic": true,
+  "label": "Synthetic fixture only; not live/API data.",
+  "results": [
+    {
+      "entity": {
+        "id": "synthetic-audience-001",
+        "name": "Synthetic Sample Audience",
+        "type": "urn:entity:audience"
+      },
+      "demographics": {
+        "age": {
+          "18-24": 0.18,
+          "25-34": 0.42,
+          "35-44": 0.27,
+          "45+": 0.13
+        },
+        "gender": {
+          "female": 0.51,
+          "male": 0.46,
+          "unspecified": 0.03
+        }
+      }
+    }
+  ]
+}

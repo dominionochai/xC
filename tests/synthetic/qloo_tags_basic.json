@@ -1,0 +1,17 @@
+{
+  "synthetic": true,
+  "label": "Synthetic fixture only; not live/API data.",
+  "results": [
+    {
+      "id": "synthetic-tag-001",
+      "name": "Coastal Minimalism",
+      "type": "urn:tag",
+      "score": 0.82,
+      "entity": {
+        "id": "synthetic-place-001",
+        "name": "Example Harbor Cafe",
+        "type": "urn:entity:place"
+      }
+    }
+  ]
+}

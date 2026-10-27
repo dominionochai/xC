@@ -1,0 +1,26 @@
+{
+  "synthetic": true,
+  "label": "Synthetic fixture only; not live/API data.",
+  "results": [
+    {
+      "entity": {
+        "id": "synthetic-place-005",
+        "name": "Example Night Market",
+        "type": "urn:entity:place"
+      },
+      "insights": {
+        "results": [
+          {
+            "id": "synthetic-tag-005",
+            "name": "Late-Night Street Food",
+            "type": "urn:tag",
+            "score": 0.71
+          }
+        ]
+      },
+      "metadata": {
+        "shape_note": "Nested result shape is synthetic fixture data."
+      }
+    }
+  ]
+}

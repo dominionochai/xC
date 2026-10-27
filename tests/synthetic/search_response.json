@@ -1,0 +1,9 @@
+{
+  "results": [
+    {
+      "id": "synthetic-brand-001",
+      "name": "Synthetic Example Brand",
+      "type": "urn:entity:brand"
+    }
+  ]
+}
