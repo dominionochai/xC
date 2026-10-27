@@ -3,9 +3,11 @@ on: [push]
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      XC_API_TOKEN: test-token
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - run: pip install pydantic httpx==0.27.2
-      - run: python -m unittest tests.test_qloo_client tests.test_qloo_params tests.test_qloo_normalize tests.test_qloo_extractors tests.test_qloo_service -v
+      - run: pip install -r requirements.txt httpx==0.27.2
+      - run: python -m unittest discover -s tests -t . -v
