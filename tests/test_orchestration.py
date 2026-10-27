@@ -8,7 +8,7 @@ from backend.src.services.presets import get_preset, list_presets
 
 class OrchestrationTests(unittest.TestCase):
     def make_plan(self, **changes):
-        values = dict(source_entity_id="source", comparison_entity_id="target", entity_type="urn:entity:brand", regions={"US": 800, "CA": 200}, annual_spend_per_person=15.5, preset_id="market_entry")
+        values = dict(source_entity_id="source", comparison_entity_id="target", entity_type="urn:entity:brand", regions={"US": 800, "CA": 200}, annual_spend_per_person=15.5, preset_id="lululemon-nfl")
         values.update(changes)
         return AnalysisPlan(**values)
 
@@ -34,10 +34,10 @@ class OrchestrationTests(unittest.TestCase):
 
     def test_presets_are_three_known_copyable_options(self):
         presets = list_presets()
-        self.assertEqual({preset["id"] for preset in presets}, {"brand_launch", "brand_repositioning", "market_entry"})
-        preset = get_preset("market_entry")
+        self.assertEqual({preset["id"] for preset in presets}, {"porsche-aime-leon-dore", "coachella-jacquemus", "lululemon-nfl"})
+        preset = get_preset("lululemon-nfl")
         preset["name"] = "caller mutation"
-        self.assertEqual(get_preset("market_entry")["name"], "Market entry")
+        self.assertEqual(get_preset("lululemon-nfl")["name"], "Lululemon x NFL")
 
 if __name__ == "__main__":
     unittest.main()
