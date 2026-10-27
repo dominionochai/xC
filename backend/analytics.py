@@ -89,3 +89,5 @@ def dollarized_tam(population: int, annual_spend_per_person: float) -> dict[str,
     tam = (Decimal(population) * spend).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     return {"currency": "USD", "population": population,
             "annual_spend_per_person": float(spend), "tam_usd": float(tam)}
+# Backward-compatible alias: orchestration.runner imports affinity_class.
+affinity_class = affinity_clash
