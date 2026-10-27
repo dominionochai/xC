@@ -17,7 +17,8 @@ class AnalyticsTests(unittest.TestCase):
     def test_affinity_clash_and_unknown_data(self) -> None:
         result = affinity_clash(["a", "b"], ["b", "c"])
         self.assertEqual(result["shared_entities"], ["b"])
-        self.assertAlmostEqual(result["jaccard_similarity"], 1 / 3)
+        # Production rounds Jaccard similarity to 4 places.
+        self.assertAlmostEqual(result["jaccard_similarity"], 0.3333, places=4)
         self.assertEqual(result["risk"], "medium")
         self.assertEqual(affinity_clash([], ["a"])["risk"], "unknown")
 
