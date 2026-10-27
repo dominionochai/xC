@@ -8,8 +8,8 @@ Python 3.10 or newer is required. From the repository root:
 
 ```sh
 python -m venv .venv
-. .venv/bin/activate  # Windows PowerShell: .venv\\Scripts\\Activate.ps1
-python -m pip install -e ".[dev]"
+. .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install -e ".[dev,api]"
 ```
 
 Runtime dependencies are also listed in `requirements.txt` for deployments that do not need the editable package or test extras.
@@ -26,8 +26,8 @@ uvicorn backend.app:app --reload
 `GET /health` is a configuration-independent liveness check. `POST /api/v1/reports/analyze` requires two Qloo entity IDs, regional population assumptions, and annual per-person spend. Example request (replace entity ID placeholders with IDs from your Qloo account):
 
 ```sh
-curl -X POST http://127.0.0.1:8000/api/v1/reports/analyze \\
-  -H 'Content-Type: application/json' \\
+curl -X POST http://127.0.0.1:8000/api/v1/reports/analyze \
+  -H 'Content-Type: application/json' \
   -d '{"source_entity_id":"<SOURCE_QLOO_ENTITY_ID>","comparison_entity_id":"<COMPARISON_QLOO_ENTITY_ID>","entity_type":"urn:entity:brand","regions":{"US":1000000,"CA":250000},"annual_spend_per_person":24.50}'
 ```
 
