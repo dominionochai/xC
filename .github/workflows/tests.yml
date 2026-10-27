@@ -9,29 +9,21 @@ jobs:
       XC_API_TOKEN: test-token
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install -r requirements.txt httpx==0.27.2 pytest
       - name: Publish failure inventory
         if: always()
         continue-on-error: true
         run: |
-          python -m pytest tests -q --no-header -p no:cacheprovider 2>&1 \
-            | grep -E "^(FAILED|ERROR)" > ci-failures.txt || true
-          python -m pytest tests -q --no-header -p no:cacheprovider 2>&1 \
-            | tail -n 3 >> ci-failures.txt || true
+          python -m pytest tests -q --no-header -p no:cacheprovider 2>&1 | grep -E "^(FAILED|ERROR)" > ci-failures.txt || true
+          python -m pytest tests -q --no-header -p no:cacheprovider 2>&1 | tail -n 3 >> ci-failures.txt || true
           git config user.name 'xc-ci'
           git config user.email 'ci@example.invalid'
           git checkout -B ci-report
           git add -f ci-failures.txt
           git commit -m 'ci: failure inventory' || true
           git push -f origin ci-report || true
-      - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
-      - run: pip install -r requirements.txt httpx==0.27.2 pytest
-      - name: Failure inventory
-        continue-on-error: true
-        run: |
-          python -m pytest tests -q --no-header -p no:cacheprovider 2>&1 | grep -E "^(FAILED|ERROR)" | head -n 60
-          echo '--- SUMMARY ---'
-          python -m pytest tests -q --no-header -p no:cacheprovider 2>&1 | tail -n 3
       - name: P8 focus
         continue-on-error: true
         run: |
