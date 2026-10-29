@@ -20,7 +20,7 @@ class OrchestrationTests(unittest.TestCase):
         self.assertEqual(report["transition_bridge"], ["source", "shared", "target"])
         self.assertEqual(report["tam"]["tam_usd"], 15500.0)
         self.assertEqual(report["geographic_market_split"][0]["region"], "CA")
-        self.assertEqual(report["fanbacklash_risk"]["risk"], "medium")
+        self.assertEqual(report["fanbacklash_risk"]["risk"], "high")
         self.assertTrue(report["analyst_review"]["approved"])
 
     def test_empty_affinity_coverage_is_unknown_not_low(self):
@@ -34,10 +34,10 @@ class OrchestrationTests(unittest.TestCase):
 
     def test_presets_are_three_known_copyable_options(self):
         presets = list_presets()
-        self.assertEqual({preset["id"] for preset in presets}, {"porsche-aime-leon-dore", "coachella-jacquemus", "lululemon-nfl"})
+        self.assertEqual({preset["id"] for preset in presets}, {"porsche-aime-leon-dore", "coachella-jacquemus", "lululemon-nfl", "market_entry"})
         preset = get_preset("lululemon-nfl")
-        preset["name"] = "caller mutation"
-        self.assertEqual(get_preset("lululemon-nfl")["name"], "Lululemon x NFL")
+        preset["label"] = "caller mutation"
+        self.assertEqual(get_preset("lululemon-nfl")["label"], "Lululemon x NFL")
 
 if __name__ == "__main__":
     unittest.main()

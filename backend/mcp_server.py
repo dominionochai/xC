@@ -13,10 +13,16 @@ import warnings
 from collections.abc import Mapping
 from typing import Any, Callable
 
+# MCP SDK 2.x uses MCPServer from mcp.server
+try:
+    from mcp.server import MCPServer as FastMCP
+except ImportError:
+    FastMCP = None  # type: ignore[assignment,misc]
+# Fallback for older MCP SDK 1.x
 try:
     from mcp.server.fastmcp import FastMCP
 except ImportError:
-    FastMCP = None  # type: ignore[assignment,misc]
+    pass
 
 
 class QlooBudgetExceeded(RuntimeError):
@@ -59,7 +65,7 @@ def _budget_limit() -> int:
 def _load_registry() -> Any:
     """Load the project's single shared ToolSpec registry lazily."""
     try:
-        from agents.tools import registry
+        from agents.tools import REGISTRY as registry
     except ImportError as exc:
         raise RuntimeError("Unable to import the agents.tools registry") from exc
     return registry

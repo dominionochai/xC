@@ -2,9 +2,10 @@
 from __future__ import annotations
 from typing import Any
 PRESETS: tuple[dict[str, Any], ...] = (
- {"id":"porsche-aime-leon-dore","label":"Porsche x Aimé Leon Dore","acquirer_brand":"Porsche","target_brand":"Aimé Leon Dore","description":"Cultural fit assessment for a premium automotive and fashion partnership."},
- {"id":"coachella-jacquemus","label":"Coachella x Jacquemus","acquirer_brand":"Coachella","target_brand":"Jacquemus","description":"Cultural fit assessment for a live-music and luxury-fashion partnership."},
- {"id":"lululemon-nfl","label":"Lululemon x NFL","acquirer_brand":"Lululemon","target_brand":"NFL","description":"Cultural fit assessment for an athletic-apparel and professional-sports partnership."},
+  {"id":"market_entry","label":"Market Entry","acquirer_brand":"","target_brand":"","description":"Market entry analysis."},
+  {"id":"porsche-aime-leon-dore","label":"Porsche x Aimé Leon Dore","acquirer_brand":"Porsche","target_brand":"Aimé Leon Dore","description":"Cultural fit assessment for a premium automotive and fashion partnership."},
+  {"id":"coachella-jacquemus","label":"Coachella x Jacquemus","acquirer_brand":"Coachella","target_brand":"Jacquemus","description":"Cultural fit assessment for a live-music and luxury-fashion partnership."},
+  {"id":"lululemon-nfl","label":"Lululemon x NFL","acquirer_brand":"Lululemon","target_brand":"NFL","description":"Cultural fit assessment for an athletic-apparel and professional-sports partnership."},
 )
 def list_presets() -> list[dict[str, Any]]:
     return [dict(p) for p in PRESETS]

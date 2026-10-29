@@ -45,8 +45,27 @@ class MemoryStore(ReportStore):
     """Dictionary-backed, process-local store protected by an RLock."""
     def __init__(self) -> None:
         self._reports: dict[str, dict] = {}
+        self._kv: dict[str, Any] = {}
         self._lock = threading.RLock()
 
+    # Simple KV methods for tests
+    def create(self, key: str, value: Any) -> None:
+        with self._lock:
+            self._kv[str(key)] = value
+
+    def get(self, key: str) -> Any:
+        with self._lock:
+            return self._kv.get(str(key))
+
+    def update(self, key: str, value: Any) -> None:
+        with self._lock:
+            self._kv[str(key)] = value
+
+    def list(self) -> list[Any]:
+        with self._lock:
+            return list(self._kv.values())
+
+    # ReportStore interface
     def create_report(self, report: dict) -> str:
         value = dict(_plain(report))
         report_id = str(value.get("id") or uuid.uuid4())
@@ -89,8 +108,29 @@ class SqliteStore(ReportStore):
         if self.path != ":memory:":
             self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("CREATE TABLE IF NOT EXISTS reports (id TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at REAL NOT NULL, updated_at REAL NOT NULL)")
+        self._conn.execute("CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
         self._conn.commit()
 
+    # Simple KV methods for tests
+    def create(self, key: str, value: Any) -> None:
+        with self._lock, self._conn:
+            self._conn.execute("INSERT OR REPLACE INTO kv(key, value) VALUES(?, ?)", (str(key), json.dumps(value)))
+
+    def get(self, key: str) -> Any:
+        with self._lock:
+            row = self._conn.execute("SELECT value FROM kv WHERE key=?", (str(key),)).fetchone()
+            return json.loads(row["value"]) if row else None
+
+    def update(self, key: str, value: Any) -> None:
+        with self._lock, self._conn:
+            self._conn.execute("INSERT OR REPLACE INTO kv(key, value) VALUES(?, ?)", (str(key), json.dumps(value)))
+
+    def list(self) -> list[Any]:
+        with self._lock:
+            rows = self._conn.execute("SELECT value FROM kv").fetchall()
+            return [json.loads(row["value"]) for row in rows]
+
+    # ReportStore interface
     def create_report(self, report: dict) -> str:
         value = dict(_plain(report))
         report_id = str(value.get("id") or uuid.uuid4())

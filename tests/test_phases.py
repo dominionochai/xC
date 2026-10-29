@@ -28,7 +28,7 @@ class PhaseAgentTests(unittest.TestCase):
             with self.subTest(phase=phase):
                 # Instantiate the repository's concrete class with its default
                 # (unconfigured) LLM rather than testing a duplicate plan.
-                agent = type(AGENTS[phase])()
+                agent = AGENTS[phase]()
                 self.assertIsNone(agent.llm)
                 first = agent.plan(
                     self.qloo, self.budget, self.inputs[phase]
@@ -61,7 +61,7 @@ class PhaseAgentTests(unittest.TestCase):
                     return result
 
                 setattr(fake_module, candidates[phase][0], fake_engine)
-                agent = type(AGENTS[phase])()
+                agent = AGENTS[phase]()
                 with patch("importlib.import_module", return_value=fake_module):
                     result = agent.execute(self.qloo, self.budget)
                 self.assertIsInstance(result, dict)

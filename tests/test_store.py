@@ -24,11 +24,13 @@ class SqliteStoreTests(unittest.TestCase):
             with patch.dict(os.environ, {"XC_DB_PATH": db_path}):
                 first = SqliteStore()
                 first.create("key", "value")
+                first.close()
                 del first
 
                 second = SqliteStore()
                 self.assertEqual(second.get("key"), "value")
                 self.assertEqual(len(second.list()), 1)
+                second.close()
 
     def test_default_in_memory_store(self):
         with patch.dict(os.environ):
@@ -36,6 +38,7 @@ class SqliteStoreTests(unittest.TestCase):
             store = SqliteStore()
             store.create("key", "value")
             self.assertEqual(store.get("key"), "value")
+            store.close()
 
 
 if __name__ == "__main__":

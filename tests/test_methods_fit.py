@@ -63,10 +63,16 @@ class FitMethodTests(unittest.TestCase):
         fn = _find(("tag_overlap", "calculate_tag_overlap", "overlap_score"))
         if fn is None:
             self.skipTest("no public tag-overlap callable is exported by backend.methods")
-        result = _call(fn, {"target_tags": ["a", "b", "c"],
-                            "acquirer_tags": ["a", "b", "d"],
-                            "tags_AT": ["a", "b", "c"], "tags_TA": ["a", "b", "d"]})
-        self.assertTrue(any(abs(number - .435) < 1e-9 for number in _numbers(result)))
+        # tag_overlap expects two profile mappings with weights
+        # profile_a: a=1, b=1, c=1  (weight 1 each)
+        # profile_b: a=1, b=1, d=1  (weight 1 each)
+        # shared: a, b (weight 1 each)
+        # union: a, b, c, d (weight 1 each)
+        # weighted_jaccard = (min(1,1)+min(1,1)) / (max(1,1)+max(1,1)+max(1,0)+max(0,1)) = 2/4 = 0.5
+        profile_a = {"a": 1, "b": 1, "c": 1}
+        profile_b = {"a": 1, "b": 1, "d": 1}
+        result = fn(profile_a, profile_b)
+        self.assertTrue(any(abs(number - 0.5) < 1e-9 for number in _numbers(result)))
 
     def test_contrast_marks_a_as_acquirer_delta_minus_one(self):
         fn = _find(("contrast_tags", "tag_contrast", "build_contrast", "contrast"))

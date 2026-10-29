@@ -6,17 +6,21 @@ from backend.app import app
 from backend.src.services.presets import list_presets, resolve_preset
 
 
-def test_preset_catalog_exposes_exactly_three_ids() -> None:
+def test_preset_catalog_exposes_exactly_four_ids() -> None:
     expected_ids = {
         "porsche-aime-leon-dore",
         "coachella-jacquemus",
         "lululemon-nfl",
+        "market_entry",
     }
     assert {preset["id"] for preset in list_presets()} == expected_ids
 
-    response = TestClient(app).get("/api/v1/presets")
-    assert response.status_code == 200
-    assert {preset["id"] for preset in response.json()} == expected_ids
+    import os
+    from unittest.mock import patch
+    with patch.dict(os.environ, {"XC_API_TOKEN": "test-token"}):
+        response = TestClient(app).get("/api/v1/presets", headers={"Authorization": "Bearer test-token"})
+        assert response.status_code == 200
+        assert {preset["id"] for preset in response.json()} == expected_ids
 
 
 def test_preset_brand_match_is_case_insensitive() -> None:

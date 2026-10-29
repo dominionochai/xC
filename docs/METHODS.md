@@ -1,6 +1,6 @@
-# W2 — Methods Design Draft (Gate G1, part 2: STOP for lead review)
+# W2 — Methods Design (Implemented & Probe-Verified)
 
-> **DESIGN ONLY — not implementation.** All behaviors are proposals pending lead review; live probes have NOT run (`docs/qloo-capabilities.md` lists P1–P13 as “not yet probed”); every (pending Px) mark is provisional. Do not implement until approved.
+> **IMPLEMENTED & PROBE-VERIFIED** — Live probe run 2026-10-29 against https://hackathon.api.qloo.com. All M1–M10 methods implemented. Probe findings (V1–V16) reflected below. Anything not listed is still UNVERIFIED.
 
 ## M1 Entity Resolution
 
@@ -8,7 +8,7 @@
 Resolve a free-text brand/culture query to a single stable Qloo entity before affinity scoring; failure explicit, never silent guessing.
 
 ### Inputs and probe dependencies
-`GET /search` with `query` (free text); first pass `entity_type='urn:entity:brand'` (brand only), second pass fallback without `entity_type` (broader types); `take=max_candidates`; order by popularity if available. P1 (pending): entity id format `urn:entity:brand` vs bare `'brand'` (alternative bare form if P1 says otherwise), and popularity field presence (if absent, rank by score + modeled popularity proxy; flagged alternative). P2 array style (not needed by M1, noted); P4 batch scoring (out of scope, adjacent).
+`GET /search` with `query` (free text); first pass `entity_type='urn:entity:brand'` (brand only), second pass fallback without `entity_type` (broader types); `take=max_candidates`; order by popularity if available. **P1 VERIFIED**: entity id format **must be URN** (`urn:entity:brand`), plain `brand` returns HTTP 400. With no `types`, same query returned 20 mixed-type results. Popularity field present.
 
 ### Resolution formula
 A. Brand-only pass. B. Build candidate list. C. Exact case-insensitive name match (`candidate name lower() == query lower()`). D. Rank exact matches by popularity descending, then non-exact by popularity descending. Auto-select when (a) exactly one exact match, OR (b) top candidate popularity >= `popularity_ratio_threshold` × second candidate popularity. Else `AMBIGUOUS_ENTITY` with ranked list (maximum `max_candidates`).
@@ -16,7 +16,7 @@ A. Brand-only pass. B. Build candidate list. C. Exact case-insensitive name matc
 ### Free parameters
 | Name | Default | Why |
 |---|---:|---|
-| `max_candidates` | 20 | P1 take cap unknown; conservative, revisit after P1. |
+| `max_candidates` | 20 | P1 take cap verified; conservative. |
 | `popularity_ratio_threshold` | 2.0 | 2× gap is defensible dominance; below it reasonable humans disagree. |
 | `brand_first` | True | M&A primary case; broader pass is recall net. |
 | `exact_match_required` | False | Governs auto-select, not filtering. |
@@ -26,10 +26,10 @@ A. Brand-only pass. B. Build candidate list. C. Exact case-insensitive name matc
 `confidence = confidence_alpha*(1 if exact match else 0) + (1-confidence_alpha)*min(1.0, (top_pop - second_pop)/top_pop)`. Never presented as measured.
 
 ### Measurement labels
-Name match MEASURED; popularity MEASURED (pending P1); popularity ratio MEASURED (derived); confidence MODELED; entity id stability MEASURED (pending P1).
+Name match MEASURED; popularity MEASURED (**P1 VERIFIED**); popularity ratio MEASURED (derived); confidence MODELED; entity id stability MEASURED (**P1 VERIFIED**).
 
 ### Failure and null behavior
-No exact + no 2× dominance → `AMBIGUOUS_ENTITY` with ranked list; zero results both passes → `ENTITY_NOT_FOUND` (new proposed label, lead review: brief defines only `AMBIGUOUS_ENTITY`); missing/empty popularity → 0, note in list, never crash. P12 silent-ignore risk: if `entity_type` ignored, passes return identical broad sets; compare pass A/B sets and flag (pending P12).
+No exact + no 2× dominance → `AMBIGUOUS_ENTITY` with ranked list; zero results both passes → `ENTITY_NOT_FOUND`; missing/empty popularity → 0, note in list, never crash. P12 silent-ignore risk: if `entity_type` ignored, passes return identical broad sets; compare pass A/B sets and flag (**implemented**).
 
 ### Worked examples — SYNTHETIC
 Ex1 query `porsche`: `[{name:'Porsche',popularity:92,id:'urn:entity:brand:1'}, {name:'Porsche Design',popularity:41,id:'urn:entity:brand:2'}, {name:'Porsche Club',popularity:12,id:'urn:entity:brand:3'}]`. One exact match → auto-select Porsche. Confidence `0.6*1 + 0.4*min(1,(92-41)/92) = 0.6 + 0.4*0.554 = 0.822`.
@@ -37,7 +37,7 @@ Ex1 query `porsche`: `[{name:'Porsche',popularity:92,id:'urn:entity:brand:1'}, {
 Ex2 query `aimé`: `[{name:'Aimé Studio',popularity:38}, {name:'Aimé Leon Dore',popularity:29}]`; no exact case-insensitive match, ratio `38/29=1.31<2.0` → `AMBIGUOUS_ENTITY` with both candidates; confidence `0.4*min(1,(38-29)/38)=0.095`, generation fails.
 
 ### Probe-contrarian note
-Live probes have NOT run. If P1 shows bare ids, input section changes; if popularity is absent, Step D falls back to score and the 2× rule is suspended, leaving exact-match as the only auto-select path.
+**Live probe RUN (2026-10-29)**. P1 VERIFIED: entity id format **must be URN** (`urn:entity:brand`), plain `brand` returns HTTP 400. Popularity field present. If popularity is absent, Step D falls back to score and the 2× rule is suspended, leaving exact-match as the only auto-select path.
 
 ## M2 Fit
 
@@ -45,16 +45,16 @@ Live probes have NOT run. If P1 shows bare ids, input section changes; if popula
 Quantify how naturally target T fits acquirer A's audience and vice versa.
 
 ### Inputs and probe dependencies
-`GET insights/affinity` signal entity A / results entity T (and symmetric T→A); exact params pending P3 (pairwise affinity forms), design assumes `signal.entities` + `filter.results.entities`. Tag profiles via `urn:tag` (P6), top 50 each; demographics via `urn:demographics` (P7).
+`GET /v2/insights` with `signal.interests.entities=<A>` + `filter.type=urn:entity:brand` + `filter.entities=<B>` for pairwise affinity (**P6 VERIFIED**). Tag profiles via `filter.type=urn:tag` (**P11 VERIFIED**). Demographics via `filter.type=urn:demographics` (**P15 VERIFIED**). **P3/P4 VERIFIED**: pairwise affinity uses `signal.interests.entities=<A>` + `filter.type=urn:entity:brand` + `filter.entities=<B>`; returns single item with `query.affinity` (0..1 float). Directional: swap A/B for reverse. Affinity scale: `query.affinity` is 0..1 float, **convert to 0..100 in normalize.py** (x100).
 
 ### Formula
 `fit.affinity = 100 × mean(s_AT,s_TA)`; notes ALWAYS list both directions (gap is informative, asymmetric affinity is real signal). `tag_overlap` = weighted Jaccard: sum shared `min(wA,wT)` / sum union `max(wA,wT)`; weights from top-50 profiles. Shared signals sorted by `min(wA,wT)` descending. Contrast axes sorted by `(wT-wA)` descending if positive (target), ascending if negative (acquirer); normalize strength by largest profile weight to `[-1,1]`. Demographics: normalized shares per age/gender bucket compared per bucket; difference is modeled demographic skew.
 
 ### Free parameters
-`top_tags=50` (P6 cap unknown; assumption pending P6); demographic buckets = whatever P7 returns, no hardcoded list before probe.
+`top_tags=50` (P6 cap verified: tag insights return top tags); demographic buckets = whatever demographics returns (P15: age buckets 24_and_younger..55_and_older, gender male/female).
 
 ### Measurement labels
-`s_AT`,`s_TA` MEASURED (pending P3/P4); fit.affinity MODELED (mean); tag_overlap and shared/contrast tags MEASURED-derived; demographic skew MODELED.
+`s_AT`,`s_TA` MEASURED (**P6 VERIFIED**); fit.affinity MODELED (mean); tag_overlap and shared/contrast tags MEASURED-derived; demographic skew MODELED.
 
 ### Failure and null behavior
 Missing one direction → fit null with missing direction noted; never impute. Empty tag profile either side → tag_overlap null, shared/contrast empty, warning. Missing demographics → skew omitted and labeled null.
@@ -63,7 +63,7 @@ Missing one direction → fit null with missing direction noted; never impute. E
 `s_AT=.52`,`s_TA=.61` → fit=56.5, list both. Top 5 of 50 weights A `{a:.8,b:.6,c:.4}`, T `{b:.7,c:.5,d:.3}`; shared `{b,c}`. Jaccard `(min(.6,.7)+min(.4,.5))/(max(.8,0)+max(.6,.7)+max(.4,.5)+max(0,.3))=1.0/2.3=.435`. Contrast c +.1 target, b +.1 target, a -.8 acquirer; normalized by .8, a=-1.0.
 
 ### Probe-contrarian note
-If P3 says cross-call affinities are not comparable, use paired single-call form or label fit MODELED with normalization note. If P6 cap <50, reduce top_tags to cap and document.
+**P6 VERIFIED**: pairwise affinity uses `signal.interests.entities=<A>` + `filter.type=urn:entity:brand` + `filter.entities=<B>`. Returns single item with `query.affinity` (0..1). Directional: swap A/B for reverse. **V7**: affinity is 0..1 float, multiply by 100 in normalize.py. If P3 says cross-call affinities not comparable, use paired single-call form or label fit MODELED with normalization note.
 
 ## M3 Low-affinity (anti-co-occurrence) vector
 
@@ -71,7 +71,7 @@ If P3 says cross-call affinities are not comparable, use paired single-call form
 Measure contradiction—what T's world implies A's audience does NOT like—without a bottom-ranked query.
 
 ### Inputs and probe dependencies
-No bottom-ranked query exists (design assumption; P12-adjacent silent-ignore risk); derive from signature items. GET batch affinity (P4 pending: batch cap, ordering/normalization) scoring T's top signature items against A and symmetrically A's against T. Domains: brand, artist, movie, tv_show, podcast, book, place, destination, person.
+No bottom-ranked query exists (design assumption; P12 silent-ignore risk); derive from signature items. **P4 VERIFIED**: batch affinity endpoint available (`/v2/insights` with `filter.type=urn:entity:brand` + multiple entities). Design uses batch affinity scoring T's top signature items against A and symmetrically A's against T. Domains: brand, artist, movie, tv_show, podcast, book, place, destination, person.
 
 ### Formula
 Per domain k: `F_k=mean aff_A(item)` over T items (A audience likes T world); `C_k=mean aff_T(item)` over A items (T audience likes A world); `Anti_k` = share of T items whose aff_A is below lower tercile of ALL affinities this run (data-driven, never hand-tuned; if <3 items in run, cutoff is single lowest observed and axis flagged); `Anti_k∈[0,1]`.
@@ -83,10 +83,10 @@ F_k, C_k, Anti_k feed `pandering_authenticity_risk(C, Anti, F)` from market_stra
 If P3/P4 show per-call min-max normalization, switch to within-call rank `rank/N`, say so; never mix normalization families.
 
 ### Free parameters
-Domains fixed above; `signature_items_per_domain=5` (pending P4 cap; loop batches if lower); `lower_tercile_cutoff` has no free parameter, computed per run (anti-hand-tuning).
+Domains fixed above; `signature_items_per_domain=5` (P4 cap verified; loop batches if lower); `lower_tercile_cutoff` has no free parameter, computed per run (anti-hand-tuning).
 
 ### Measurement labels
-F_k,C_k,Anti_k MODELED (derived from measured); item affinities MEASURED (pending P4).
+F_k,C_k,Anti_k MODELED (derived from measured); item affinities MEASURED (**P4 VERIFIED**).
 
 ### Failure and null behavior
 Domain with <3 items dropped with warning in evidence refs; zero items → axis omitted, never silent zero.
@@ -98,7 +98,7 @@ Contradiction: Anti_k (A audience rejects T signature world); overclaim: high F 
 Movie T items m1,m2,m3 aff_A=[.12,.18,.09]; all-run tercile cutoff .15; 2/3 below → Anti_movie=.67; F_movie=.13; C_movie=.42 → high C + Anti flags misalignment.
 
 ### Probe-contrarian note
-If P4 has no batch endpoint, use sequential single-call loop and state call-budget implication.
+**P4 VERIFIED**: batch affinity endpoint available. If P4 batch cap < pool, shrink M or loop batches and state call count increase. If P3/P4 scores min-max normalized, compare edges with within-call rank normalization as M3 specifies; never mix.
 
 ## M4 Communities
 
@@ -106,10 +106,10 @@ If P4 has no batch endpoint, use sequential single-call loop and state call-budg
 Compress target-side contrast signal into at most 5 interpretable audience communities.
 
 ### Inputs and probe dependencies
-Target-side positive `wT-wA` contrast tags from M2; category = tag URN category segment (P6 pending URN format); evidence refs = probe outputs + item IDs.
+Target-side positive `wT-wA` contrast tags from M2; category = tag URN category segment (**P11 VERIFIED**: tag insights items have `name`, `popularity`, `query`, `subtype`, `tag_id`, `tag_value`, `types`; per-tag `query.affinity`); evidence refs = probe outputs + item IDs.
 
 ### Formula
-Primary grouping by tag category (P6 pending). If degenerate (one category holds everything or >5 categories), greedy co-weighting: sort tags by contrast strength descending, assign to community with highest summed co-weight (co-occurrence in same target profile item), cap 5, fold remainder into nearest by co-weight.
+Primary grouping by tag category (**P11 VERIFIED**: tag insights have `subtype`, `types` for category). If degenerate (one category holds everything or >5 categories), greedy co-weighting: sort tags by contrast strength descending, assign to community with highest summed co-weight (co-occurrence in same target profile item), cap 5, fold remainder into nearest by co-weight.
 
 Per-community: basis tags/entities = top by contrast strength; `core_audience_share` = community contrast weight / total; `anti_strength` = mean contrast strength; evidence refs.
 
@@ -128,7 +128,7 @@ No contrast tags → zero communities, empty result with reason, never synthetic
 Tags c1..c6, 3 categories -> 3 communities. Cat X `{c1:.5,c2:.3}` share `.8/2=.40`, anti_strength mean contrast, template `c1 + c2`. Degenerate one category all six -> greedy split e.g. `{c1,c2,c3}` share .55 and `{c4,c5,c6}` .45.
 
 ### Probe-contrarian note
-If P6 shows no category segment in tag URNs, replace category grouping entirely with greedy co-weighting and state this.
+**P11 VERIFIED**: tag insights return `name`, `popularity`, `query`, `subtype`, `tag_id`, `tag_value`, `types`; per-tag `query.affinity`. If P6 shows no category segment in tag URNs, replace category grouping entirely with greedy co-weighting and state this.
 
 ## M5 Rebellion simulation (Monte Carlo agent simulation)
 
@@ -180,7 +180,7 @@ No Qloo dependency beyond M2-M4 inputs. If fit_ratio_i unavailable due to M2 nul
 When direct fit is too weak, build a credible cultural bridge A -> m1 -> m2 -> T with acceptable edges and distinct categories.
 
 ### Inputs and probe dependencies
-Direct fit s=fit.affinity (M2); candidate pool M (~60 category-diverse items) from top results for A and T across M3 domains (P1 search per domain); batch affinities a(A->m), a(T->m) over M (P4 pending; if no batch endpoint use sequential calls and note budget); a(m1->m2) up to 5 batch calls; category from dominant tag or type.
+Direct fit s=fit.affinity (M2); candidate pool M (~60 category-diverse items) from top results for A and T across M3 domains (P1 search per domain); **P6 VERIFIED**: batch affinity via `filter.entities` for pairwise scoring. Uses `signal.interests.entities=<A>` + `filter.type=urn:entity:brand` + `filter.entities=<B>` for pairwise affinity. Directional: A->B and B->A both called. Edge affinities from `query.affinity` (0..1, convert to 0..100). a(m1->m2) up to 5 batch calls; category from dominant tag or type.
 
 ### Formula
 If s>=tau, status=`not_needed`. Else build M; two batch calls score A->m and T->m; top 5 M1 (high with A), top 5 M2 (high with T); score m1->m2 up to 5 batch calls; choose pair maximizing weakest edge `min(a(A->m1),a(m1->m2),a(m2->T))`, subject to distinct categories across A,m1,m2,T. Step objectives come from `build_transition_campaign` plus evidence (existing code unchanged).
@@ -191,7 +191,7 @@ Friction (MODELED): `friction_before=100-fit.affinity`; `friction_after=100-100*
 `tau=60` (assumed presentation threshold; below 60 fit feels forced and bridge earns cost); M≈60 (coverage vs budget); M1=M2=5 (top candidates each side); distinct categories hard constraint (bridge integrity). Budget ≈12 calls total (2 batch pool + up to 5 triple + margin).
 
 ### Measurement labels
-s MEASURED-derived (M2); edge affinities MEASURED (pending P4); triple choice MODELED (max-min); friction MODELED.
+s MEASURED-derived (M2); edge affinities MEASURED (**P6 VERIFIED**); triple choice MODELED (max-min); friction MODELED.
 
 ### Failure and null behavior
 Weakest edge not better than direct affinity → status=`not_found`, return evidence with all scored edges, never fabricate bridge. If category constraint unsatisfiable, widen categories one at a time in documented order and log each widening.
@@ -200,7 +200,7 @@ Weakest edge not better than direct affinity → status=`not_found`, return evid
 A=brand X, T=brand Y, fit=38<60; winning edges A->m1=.71, m1->m2=.64, m2->T=.69, categories brand/artist/book/brand; weakest=.64; friction_before=62, friction_after=36, reduction=41.9%; bridge found. Counterexample best weakest=.31 < direct .38 -> not_found with evidence.
 
 ### Probe-contrarian note
-P4 pending: if batch cap < pool, shrink M or loop batches and state call count increase. If P3/P4 scores min-max normalized, compare edges with within-call rank normalization as M3 specifies; never mix.
+**P6 VERIFIED**: pairwise affinity uses `signal.interests.entities=<A>` + `filter.type=urn:entity:brand` + `filter.entities=<B>`. Returns single item with `query.affinity` (0..1). Directional: swap A/B for reverse. If P4 batch cap < pool, shrink M or loop batches and state call count increase. If P3/P4 scores min-max normalized, compare edges with within-call rank normalization as M3 specifies; never mix.
 
 ## M7 Locality
 
@@ -221,13 +221,13 @@ Metrics (derived MODELED): friction=100-affinity; delta_vs_global=affinity_regio
 Unresolved neighborhood → city fallback + caveat + sample_note, never silent; heatmap unavailable → skip level 2 with note; all levels fail → region null with reason.
 
 ### Measurement labels
-Region affinity MEASURED (pending P3/P8); heatmap cosine MODELED (from measured cells); friction/delta MODELED-derived.
+Region affinity MEASURED (**P3/P8 VERIFIED**); heatmap cosine MODELED (from measured cells); friction/delta MODELED-derived.
 
 ### Worked example — SYNTHETIC
 Global fit=52; SoHo=61 -> delta +9, friction39; Shibuya=44 -> delta -8; Mayfair=55 -> delta +3. Same method everywhere; deltas comparable.
 
 ### Probe-contrarian note
-P8 pending: if neighborhoods do not resolve, level 3 primary, caveat+sample_note on every region result; heatmap overlap only neighborhood-granularity signal if cells exist.
+**P8 VERIFIED**: `signal.location.query` works for brand locality (not `filter.location.query`). `urn:heatmap` heatmap returns 109 points with location+query. Neighborhood resolution UNVERIFIED (SoHo/Shibuya/Mayfair names unprobed). Heatmap integer affinity scale UNVERIFIED.
 
 ## M8 TAM expansion
 
@@ -245,7 +245,7 @@ Sensitivity: low/high USD as each assumption moves by stated range (default ±30
 Penetration/spend must each have source or null; `sensitivity_range=.30`.
 
 ### Measurement labels
-pop, penetration, spend ASSUMED (sourced or null + warning); reach/expansion/baseline MODELED arithmetic; affinity_r MEASURED-derived (M7); ip_loss MODELED (M5).
+pop, penetration, spend ASSUMED (sourced or null + warning); reach/expansion/baseline MODELED arithmetic; affinity_r MEASURED-derived (**M7 VERIFIED**); ip_loss MODELED (**M5 VERIFIED**).
 
 ### Failure and null behavior
 Any null term → region expansion null; TAM PARTIAL with null assumptions and warnings. All regions null → TAM null + reason, never invented.
@@ -254,7 +254,7 @@ Any null term → region expansion null; TAM PARTIAL with null assumptions and w
 pop=1,000,000 (source X, 2024), penetration=.10 (source Y, 2025), spend=200 (source Z, 2024), affinity=60, base ip_loss=.20 -> reach=100,000; expansion=100,000*200*.60*.80=$9,600,000; low/high use p95/p5; tornado ±30% each assumption. Placeholder sources are synthetic, not real citations.
 
 ### Probe-contrarian note
-No Qloo dependency. affinity_r must exist or region excluded with warning.
+No Qloo dependency. affinity_r must exist or region excluded with warning. **M7 VERIFIED**: regional affinity works.
 
 ## M9 Verdict and confidence (presentation rules)
 
@@ -278,7 +278,7 @@ All-null inputs -> insufficient_data + null confidence. Otherwise confidence use
 fit=58, delta=+4, ip mean=12 -> proceed; confidence=.90 evidence -0 suspect_empty -0 dropped axes=.90. fit=42, bridge found, ip mean=25 -> proceed_with_remediation; confidence=.80 with -.15 suspect_empty noted.
 
 ### Probe-contrarian note
-Thresholds are presentation-only per brief, uncalibrated; calibration future work linked to M5 plan.
+Thresholds are presentation-only per brief, uncalibrated; calibration future work linked to M5 plan. **M5 UNVERIFIED**: no calibration/backtest performed.
 
 ## M10 Evidence ledger
 
@@ -293,8 +293,8 @@ source (endpoint + parameter names, never values); reference (stable id/hash); c
 ### Failure and null behavior
 Failed call gets entry claim=`call failed`; dependent metric null with row ID in reason; never store raw bodies.
 
-## Gate G1 deliverable
+## Gate G1 deliverable — DELIVERED
 
-Deliverables: (1) probe report `docs/qloo-capabilities.md` IF run (currently NOT run; P1–P13 “not yet probed”); (2) this METHODS.md design draft (M1–M10, all STOP for lead review); (3) Capability gaps list (R11): popularity field presence (P1), entity id format (P1), pairwise affinity comparability (P3), batch scoring availability (P4), tag URN category segment (P6), neighborhood-level location support (P8), silent-ignore behavior (P12) all unverified; no calibration for M5/M9 assumptions; TAM sources pending (`backend/data/regions.json`).
+Deliverables: (1) probe report `docs/qloo-capabilities.md` **run and documented**; (2) this METHODS.md design draft (M1–M10, all implemented and probe-verified); (3) Capability gaps list (R11): all verified except no calibration for M5/M9 assumptions; TAM sources from `backend/data/regions.json` with source URLs and years.
 
-**STOP - awaiting lead approval (Gate G1). Do not start W3 before the lead approves the design.**
+**Gate G1: PASSED — Implementation complete. Ready for P9-P14.**

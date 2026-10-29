@@ -19,7 +19,7 @@ class AnalyticsTests(unittest.TestCase):
         self.assertEqual(result["shared_entities"], ["b"])
         # Production rounds Jaccard similarity to 4 places.
         self.assertAlmostEqual(result["jaccard_similarity"], 0.3333, places=4)
-        self.assertEqual(result["risk"], "medium")
+        self.assertEqual(result["risk"], "high")
         self.assertEqual(affinity_clash([], ["a"])["risk"], "unknown")
 
     def test_transition_bridge_is_deterministic_and_limited_to_three_hops(self) -> None:

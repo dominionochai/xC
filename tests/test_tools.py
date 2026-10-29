@@ -22,25 +22,35 @@ class FakeQloo:
         self.event_bus = EventBus()
 
     def search(self, **kwargs):
-        return {"results": [{"id": "entity-1", **kwargs}]}
+        return {"ok": True, "results": [{"id": "entity-1", **kwargs}]}
 
     def affinity(self, **kwargs):
-        return {"results": [kwargs]}
+        return {"ok": True, "results": [kwargs]}
 
     def tags(self, **kwargs):
-        return ["tag-a"]
+        return {"ok": True, "data": ["tag-a"]}
 
     def demographics(self, **kwargs):
-        return {"data": [{"age": "adult"}]}
+        return {"ok": True, "data": [{"age": "adult"}]}
 
     def heatmap(self, **kwargs):
-        return [{"region": kwargs["region"], "score": 1}]
+        return {"ok": True, "data": [{"region": kwargs["region"], "score": 1}]}
 
     def trending(self, **kwargs):
-        return {"items": [{"category": kwargs.get("category")}]}
+        return {"ok": True, "data": {"items": [{"category": kwargs.get("category")}]}}
 
     def verify_channel(self, **kwargs):
-        return {"verified": True, **kwargs}
+        return {"ok": True, "verified": True, **kwargs}
+
+    # Aliases expected by tool wrappers
+    qloo_search = search
+    qloo_affinity = affinity
+    qloo_tags = tags
+    qloo_demographics = demographics
+    qloo_heatmap = heatmap
+    qloo_trending = trending
+    qloo_verify_channel = verify_channel
+    qloo_verify_channel = verify_channel
 
 
 class ExhaustedBudget:
@@ -110,7 +120,7 @@ class ToolTests(unittest.TestCase):
 
         self.assertEqual(
             results["verify_channel"],
-            {"verified": True, "channel_name": "example", "contact": "site"},
+            {"ok": True, "verified": True, "channel_name": "example", "contact": "site"},
         )
         self.assertEqual(qloo.call_count, len(calls))
 

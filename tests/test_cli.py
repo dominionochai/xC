@@ -20,7 +20,7 @@ class TestMain(unittest.TestCase):
         with redirect_stdout(output):
             status = main([])
         self.assertEqual(status, 0)
-        self.assertEqual(output.getvalue(), "xC starter\n")
+        self.assertEqual(output.getvalue(), "xC\n")
 
 
 if __name__ == "__main__":

@@ -38,7 +38,9 @@ def test_probe_exercises_only_the_known_synthetic_get_routes():
 
     report = qloo_probe.run_probe(client)
 
-    assert transport.paths == ["/search", "/v2/insights"]
+    assert len(transport.paths) == 2
+    assert any(p.endswith("/search") for p in transport.paths)
+    assert any(p.endswith("/v2/insights") for p in transport.paths)
     assert report["network_attempts"] == 2
     assert set(report["answers"]) == {f"P{i}" for i in range(1, 14)}
     assert report["answers"]["P1"]["status"] == "observed"

@@ -44,14 +44,14 @@ class FallbackAndFakeLLMTests(unittest.TestCase):
         self.assertFalse(configured)
 
     def test_fallback_plan_uses_template_summary_and_narration_is_text(self):
-        plan = fallback_plan()
+        plan = fallback_plan("NORMALIZATION", {})
         if isinstance(plan, dict):
             summary_source = plan.get("summary_source")
         else:
             summary_source = getattr(plan, "summary_source", None)
         self.assertEqual(summary_source, "template")
 
-        narration = template_narrate(plan)
+        narration = template_narrate("NORMALIZATION", [], "summary")
         self.assertIsInstance(narration, str)
         self.assertTrue(narration.strip())
 
@@ -66,56 +66,10 @@ class FallbackAndFakeLLMTests(unittest.TestCase):
 
         hallucinated = "Unsupported claim [E999]."
         supported_evidence = [{"id": "E1", "text": "A supported fact."}]
-        allowed_refs = {"E1"}
-        values = {
-            "text": hallucinated,
-            "narration": hallucinated,
-            "content": hallucinated,
-            "claim": hallucinated,
-            "evidence": supported_evidence,
-            "sources": supported_evidence,
-            "facts": supported_evidence,
-            "refs": allowed_refs,
-            "evidence_refs": allowed_refs,
-            "allowed_refs": allowed_refs,
-            "allowed_evidence_refs": allowed_refs,
-        }
-        signature = inspect.signature(validator)
-        positional, keywords = [], {}
-        for parameter in signature.parameters.values():
-            if parameter.kind in (parameter.VAR_POSITIONAL, parameter.VAR_KEYWORD):
-                continue
-            if parameter.name in values:
-                value = values[parameter.name]
-            elif parameter.default is not inspect.Parameter.empty:
-                continue
-            else:
-                self.fail("Cannot supply required validate_narration argument: " + parameter.name)
-            if parameter.kind is parameter.KEYWORD_ONLY:
-                keywords[parameter.name] = value
-            else:
-                positional.append(value)
-
-        try:
-            result = validator(*positional, **keywords)
-        except (ValueError, AssertionError):
-            return
-
-        if isinstance(result, bool):
-            self.assertFalse(result, "hallucinated evidence reference was accepted")
-            return
-        if isinstance(result, tuple) and result and isinstance(result[0], bool):
-            self.assertFalse(result[0], "hallucinated evidence reference was accepted")
-            return
-        if isinstance(result, dict):
-            for key in ("valid", "is_valid", "accepted"):
-                if key in result:
-                    self.assertFalse(result[key], "hallucinated evidence reference was accepted")
-                    return
-        if hasattr(result, "valid"):
-            self.assertFalse(result.valid, "hallucinated evidence reference was accepted")
-            return
-        self.fail("validate_narration returned no recognizable rejection result")
+        # Pass hallucinated ref E999 which is not in the ledger
+        with self.assertRaises(ValueError) as cm:
+            validator(hallucinated, ["E999"], supported_evidence)
+        self.assertIn("evidence references absent from ledger", str(cm.exception))
 
     @unittest.skip("Transport injection is not verified; do not invent a fake-output interface.")
     def test_malformed_fake_output(self):
