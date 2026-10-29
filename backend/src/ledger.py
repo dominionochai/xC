@@ -35,7 +35,7 @@ class Ledger:
         re.IGNORECASE,
     )
     _OPAQUE_TOKEN = re.compile(r"(?<![A-Za-z0-9])[A-Za-z0-9_+/=-]{32,}(?![A-Za-z0-9])")
-    _SENTENCE_END = re.compile(r"[.!?]+(?=(?:[\"'”’\)\]]*\s|[\"'”’\)\]]*$)")
+    _SENTENCE_END = re.compile(r"[.!?]+(?=(?:[\"'”’\)\]]*\s|[\"'”’\)\]]*$))")
     _ABBREVIATIONS = ("mr", "mrs", "ms", "dr", "prof", "sr", "jr", "st", "vs", "etc", "e.g", "i.e")
 
     def __init__(self) -> None:
@@ -78,7 +78,7 @@ class Ledger:
         for match in endings:
             if match.group(0) == ".":
                 prefix = claim[: match.start()].rstrip().lower()
-                if any(prefix.endswith(abbreviation) for abbreviation in cls._ABBREVIATIONS):
+                if (prefix.split() or [''])[-1] in cls._ABBREVIATIONS:
                     continue
             counted += 1
         if counted != 1 or not re.search(r"[.!?][\"'”’\)\]]*\s*$", claim):

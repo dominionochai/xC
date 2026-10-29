@@ -223,7 +223,7 @@ def create_app():
             while True:
                 retained = bus.get_run_events()
                 if retained and cursor and cursor < retained[0]["seq"] - 1:
-                    yield "event: RUN_NOT_RESUMABLE\\ndata: {\\"reason\\":\\"event history expired\\"}\\n\\n"
+                    yield 'event: RUN_NOT_RESUMABLE\ndata: {"reason":"event history expired"}\n\n'
                     return
                 batch = [ev for ev in retained if ev["seq"] > cursor]
                 for ev in batch:
