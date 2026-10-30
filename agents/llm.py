@@ -27,15 +27,19 @@ class LLMRequestError(LLMError):
 
 def _provider(model: str, configured: str | None = None) -> tuple[str | None, str]:
     provider, actual = (configured or "").strip().lower(), model.strip()
-    if ":" in actual:
-        prefix, rest = actual.split(":", 1)
+    # V21: LiteLLM gemini format is gemini/gemini-3.5-flash-lite (provider/model)
+    if "/" in actual:
+        prefix, rest = actual.split("/", 1)
         if prefix.lower() in _KEYS:
             provider, actual = provider or prefix.lower(), rest.strip()
+        elif prefix.lower() == "gemini" and rest.startswith("gemini-"):
+            # gemini/gemini-3.5-flash-lite: provider=gemini, model=gemini-3.5-flash-lite
+            provider, actual = provider or "gemini", rest.strip()
     if not provider:
         lowered = actual.lower()
         if lowered.startswith(("gpt-", "o1", "o3", "o4")): provider = "openai"
         elif lowered.startswith("claude-"): provider = "anthropic"
-        elif lowered.startswith("gemini-"): provider = "gemini"
+        elif lowered.startswith("gemini-") or "/gemini-" in actual: provider = "gemini"
     return provider or None, actual
 
 def _http_transport(*, provider: str, model: str, api_key: str, prompt: str,
@@ -138,8 +142,10 @@ class LLMWrapper:
     """
     def __init__(self, model: str | None = None, *, provider: str | None = None,
                  transport: Callable[..., Any] | None = None, sleep: Callable[[float], Any] | None = None) -> None:
-        self.model = (model if model is not None else os.getenv("XC_LLM_MODEL", "")).strip()
-        self.provider, self.api_model = _provider(self.model, provider if provider is not None else os.getenv("XC_LLM_PROVIDER"))
+        # V21: Use gemini/gemini-3.5-flash-lite as default (LiteLLM format)
+        self.model = (model if model is not None else os.getenv("XC_LLM_MODEL", "gemini/gemini-3.5-flash-lite")).strip()
+        # Gemma 3.5 flash-lite requires GEMINI_API_KEY; never log the key
+        self.provider, self.api_model = _provider(self.model, provider if provider is not None else os.getenv("XC_LLM_PROVIDER", "gemini"))
         self._transport, self._sleep = transport or _http_transport, sleep or time.sleep
     def _api_key(self) -> str | None:
         if self.provider not in _KEYS: return None
