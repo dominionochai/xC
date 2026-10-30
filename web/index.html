@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>xC: cultural due diligence</title>
+<meta name="description" content="xC prices the cultural fit of a brand deal: measured taste data, a fan-rebellion simulation, a three-step bridge, regional ground truth and a dollar figure.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=Schibsted+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<header class="bar">
+  <a class="mark" href="./" aria-label="xC home"><span class="mark-x">x</span><span class="mark-c">C</span></a>
+  <form class="ask" id="ask" autocomplete="off">
+    <label class="fld"><span class="sr">Brand A</span><input id="brandA" name="a" placeholder="First brand" spellcheck="false" required></label>
+    <span class="times" aria-hidden="true">×</span>
+    <label class="fld"><span class="sr">Brand B</span><input id="brandB" name="b" placeholder="Second brand" spellcheck="false" required></label>
+    <button class="go" id="go" type="submit">Run audit</button>
+  </form>
+  <div class="status" id="status" role="status"></div>
+</header>
+
+<nav class="presets" aria-label="Case studies" id="presets"></nav>
+
+<div class="banner" id="banner" hidden></div>
+
+<main class="split" id="split">
+  <section class="pane stream" aria-label="Live agent stream">
+    <div class="pane-head">
+      <h2>Live agent stream</h2>
+      <div class="pane-tools">
+        <span class="clock" id="clock">0.0s</span>
+        <div class="seg" role="group" aria-label="Replay speed" id="speed">
+          <button type="button" data-speed="1">Real time</button>
+          <button type="button" data-speed="3" class="on">Fast</button>
+          <button type="button" data-speed="0">Instant</button>
+        </div>
+      </div>
+    </div>
+    <div class="phasebar" id="phasebar"></div>
+    <div class="log" id="log" tabindex="0" aria-live="polite"></div>
+  </section>
+
+  <section class="pane card" aria-label="Executive audit card" id="cardpane">
+    <div class="card-inner" id="card"></div>
+  </section>
+</main>
+
+<div class="picker" id="picker" hidden role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+  <div class="picker-box">
+    <h3 id="pickerTitle">Which one did you mean?</h3>
+    <p class="picker-sub" id="pickerSub"></p>
+    <div id="pickerList"></div>
+    <button type="button" class="ghost" id="pickerCancel">Cancel</button>
+  </div>
+</div>
+
+<script src="assets/charts.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

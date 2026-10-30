@@ -1,0 +1,26 @@
+{
+ "_notice": "SYNTHETIC FIXTURE - NOT QLOO OUTPUT",
+ "presets": [
+  {
+   "id": "porsche-aime-leon-dore",
+   "label": "Porsche x Aimé Leon Dore",
+   "acquirer_brand": "Porsche",
+   "target_brand": "Aimé Leon Dore",
+   "description": "Automotive heritage meets downtown New York streetwear."
+  },
+  {
+   "id": "coachella-jacquemus",
+   "label": "Coachella x Jacquemus",
+   "acquirer_brand": "Coachella",
+   "target_brand": "Jacquemus",
+   "description": "Festival stage sponsorship meets a luxury fashion activation."
+  },
+  {
+   "id": "lululemon-nfl",
+   "label": "Lululemon x NFL",
+   "acquirer_brand": "Lululemon",
+   "target_brand": "NFL",
+   "description": "Activewear expansion into professional football licensing."
+  }
+ ]
+}
