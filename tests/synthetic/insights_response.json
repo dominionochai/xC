@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "entity": {
+        "id": "synthetic-brand-001",
+        "name": "Synthetic Example Brand",
+        "type": "urn:entity:brand"
+      },
+      "id": "synthetic-insight-001",
+      "name": "Synthetic Example Interest",
+      "type": "urn:tag",
+      "score": 0.91
+    }
+  ]
+}
