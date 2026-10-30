@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import math
+import os
 from datetime import datetime, timezone
 from typing import Any, Iterator
 from uuid import uuid4
@@ -213,7 +214,25 @@ def _run_analysis(request: AnalyzeRequest, qloo: QlooClient) -> dict[str, Any]:
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok"}
+    # V21: Report live only when Qloo key is set and LiteLLM test call succeeds
+    live = False
+    try:
+        qloo_key = os.environ.get("QLOO_API_KEY", "").strip()
+        gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
+        if qloo_key and gemini_key:
+            # One real test call to confirm LiteLLM works
+            from agents.llm import LLMWrapper
+            wrapper = LLMWrapper()
+            if wrapper.is_configured():
+                # Minimal non-billing prompt
+                try:
+                    result = wrapper.complete("test", {"type": "object", "properties": {"ok": {"type": "boolean"}}, "required": ["ok"]})
+                    live = result.get("ok") is True
+                except Exception:
+                    live = False
+    except Exception:
+        live = False
+    return {"status": "live" if live else "ok", "live": live, "qloo_configured": bool(qloo_key), "llm_configured": bool(gemini_key)}
 
 
 @app.get("/api/v1/presets", tags=["presets"], summary="List built-in analysis presets")
