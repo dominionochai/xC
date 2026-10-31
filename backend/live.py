@@ -36,6 +36,11 @@ PHASE_TITLES = ["Catalog and entity normalization", "Extraction and multi-domain
                 "Cross-system latent bridge discovery", "Adversarial backlash and pandering audit",
                 "Dollarized TAM and remediation synthesis"]
 SIM_RUNS = 5000
+# Qloo's pairwise affinity runs high. In a live sample of 14 pairs, mismatched brands scored 60-66 and
+# well-matched ones 75-96, so the verdict bands sit inside that observed range instead of 0-100.
+BRIDGE_BELOW = 75
+PROCEED_FIT = 85
+HIGH_RISK_FIT = 55
 SEED = 42
 CACHE_TTL = 3600
 MAX_CELLS = 420
@@ -159,6 +164,10 @@ def best_match(cands: list[dict], name: str) -> dict | None:
         words = norm(c["name"]).split()
         if len(flat) >= 2 and len(words) >= 2 and "".join(w[0] for w in words) == flat:
             return c
+    if len(n) >= 3:
+        for c in cands:  # Qloo ranks by relevance, so the first whole-word prefix match is the intended brand
+            if norm(c["name"]).startswith(n + " "):
+                return c
     close = [c for c in cands if n and (n in norm(c["name"]) or norm(c["name"]) in n) and len(norm(c["name"])) >= 3]
     return close[0] if len(close) == 1 else None
 
@@ -365,6 +374,7 @@ class LiveRun:
         if fit is not None:
             self.emit("metric.updated", {"key": "fit.affinity", "metric": metric(fit, "measured", "index_0_100", "pair-affinity-v1")})
             fit_idx = self.ledger("qloo./v2/insights", f"call:{self._calls}", f"Pairwise affinity between the two brands is {fit:.0f} out of 100.", {"a_to_b": ab, "b_to_a": ba})
+            self.warn("affinity_scale", "Qloo's pairwise affinity runs high: in our live sample, mismatched brands scored 60 to 66 and well-matched ones 75 to 96. Read the score against that range.", "fit")
         else:
             self.warn("fit_unavailable", "Qloo returned no pairwise affinity for these brands, so the fit score is not available.", "fit")
 
@@ -537,7 +547,9 @@ class LiveRun:
                     t += p * pop_m * pen * pen_m * spend * spend_m * min(100, a * aff_m) / 100 * (1 - loss)
             return t
 
-        have_tam = sim is not None and all(a is not None for a in affs)
+        have_tam = sim is not None and any(a is not None for a in affs)
+        if have_tam and any(a is None for a in affs):
+            self.warn("region_missing", "Qloo had too little map data for one city, so the dollar range counts only the cities that could be compared.", "tam")
         base = low = high = baseline = None
         sens = []
         if have_tam:
@@ -551,16 +563,16 @@ class LiveRun:
             self.ledger("assumption", "assume:1", f"Penetration is assumed at {pen:.0%} of the catchment, and annual spend at ${spend:.0f} per customer.")
             self.ledger("model.tam", "derive:tam", f"Base expansion is ${base / 1e6:,.0f} million.")
         else:
-            self.warn("tam_unavailable", "A dollar figure needs both a regional fit and a backlash simulation. At least one was not available.", "tam")
+            self.warn("tam_unavailable", "A dollar figure needs at least one comparable city and a backlash simulation. Neither was fully available.", "tam")
         for r in regions:
             self.emit("metric.updated", {"key": f"locality.region.{r['key']}.affinity", "metric": r["affinity"]})
 
         risk = sim["mean"] if sim else None
         if fit is None or not have_tam:
             verdict, vtxt = "insufficient_data", "Qloo did not return enough data for these brands to price the deal. The sections below show what was measured."
-        elif fit >= 70 and (risk or 0) < 12:
+        elif fit >= PROCEED_FIT and (risk or 0) < 12:
             verdict, vtxt = "proceed", "The two audiences already overlap. The deal can go ahead without a bridge, and the main risk is contained."
-        elif (risk or 0) >= 25 or fit < 35:
+        elif (risk or 0) >= 25 or fit < HIGH_RISK_FIT:
             verdict, vtxt = "high_risk", "The audiences overlap too little and the expected fan reaction is large. The deal needs a rethink before it goes ahead."
         else:
             verdict, vtxt = "proceed_with_remediation", "The deal is workable, but fan rebellion needs a plan before announcement."
@@ -621,7 +633,7 @@ class LiveRun:
 
     def _bridge(self, A: dict, B: dict, fit: float | None) -> dict:
         before = None if fit is None else round(100 - fit, 1)
-        if fit is None or fit >= 70:
+        if fit is None or fit >= BRIDGE_BELOW:
             self.note("bridge scout", "Direct fit is strong or unavailable. No bridge required." if fit is not None else "No fit score, so no bridge was searched.")
             return {"status": "not_needed", "steps": [], "friction_before": metric(before, "modeled", "index_0_100", "bridge-v1"),
                     "friction_after": metric(before, "modeled", "index_0_100", "bridge-v1"), "friction_reduction_pct": metric(0, "modeled", "percent", "bridge-v1")}
@@ -637,20 +649,42 @@ class LiveRun:
                     d[it["entity_id"]] = (it.get("name") or "", v * 100 if v <= 1.5 else v)
             lists[tag] = d
         common = [(min(lists["a"][k][1], lists["b"][k][1]), lists["a"][k][0], k) for k in lists["a"] if k in lists["b"]]
+        if len(common) < 3:
+            self.note("bridge scout", "Few brands sit in both audiences' top 50. Testing each side's strongest neighbours directly against the other brand.")
+
+            def pair_aff(x_id, x_name, y_id, y_name):
+                body = self.call("/v2/insights", [("signal.interests.entities", x_id), ("filter.type", BRAND), ("filter.entities", y_id)],
+                                 {"signal.interests.entities": x_name, "filter.type": BRAND, "filter.entities": y_name},
+                                 lambda b: (len(items(b)), "Pairwise affinity read."))
+                for it in items(body):
+                    v = _aff(it)
+                    if v is not None:
+                        return v * 100 if v <= 1.5 else v
+                return None
+
+            have = {k for _, _, k in common}
+            for tag, other in (("a", B), ("b", A)):
+                ranked = sorted((k for k in lists[tag] if k not in have), key=lambda k: -lists[tag][k][1])[:5]
+                for k in ranked:
+                    name, own_aff = lists[tag][k]
+                    to_other = pair_aff(k, name, other["entity_id"], other["name"])
+                    if to_other is not None:
+                        common.append((min(own_aff, to_other), name, k))
+                        have.add(k)
         common.sort(reverse=True)
         top = common[:3]
         if not top:
-            self.warn("bridge_not_found", "No brand appears in both audiences' top 50, so no bridge could be built from Qloo data.", "bridge")
+            self.warn("bridge_not_found", "No brand scored well against both audiences, so no bridge could be built from Qloo data.", "bridge")
             return {"status": "not_found", "steps": [], "friction_before": metric(before, "modeled", "index_0_100", "bridge-v1"),
                     "friction_after": metric(before, "modeled", "index_0_100", "bridge-v1"), "friction_reduction_pct": metric(0, "modeled", "percent", "bridge-v1")}
-        idx = self.ledger("model.bridge", "derive:bridge", f"{len(common)} brands sit in both audiences' top 50; the strongest three were used as stepping stones.")
+        idx = self.ledger("model.bridge", "derive:bridge", f"{len(common)} candidate stepping-stone brands were scored against both audiences; the strongest three were used.")
         phases = ["Familiarization", "Co-presence", "Collaboration"]
         steps = []
         for i, (strength, name, eid) in enumerate(top):
             frm = A["name"] if i == 0 else top[i - 1][1]
             to = B["name"] if i == len(top) - 1 else name
             steps.append({"number": i + 1, "phase": phases[i], "from_category": frm, "to_category": name,
-                          "objective": f"Run a small, visible tie-in with {name}, which both audiences already rate highly, before moving closer to {B['name'] if i == len(top) - 1 else top[i + 1][1]}.",
+                          "objective": f"Run a small, visible tie-in with {name}, a brand that sits close to both audiences, before moving closer to {B['name'] if i == len(top) - 1 else top[i + 1][1]}.",
                           "entities": [{"id": eid, "name": name}], "affinity_lift": metric(strength, "modeled", "index_points", "bridge-v1"),
                           "evidence_refs": [idx]})
         strength = sum(s for s, _, _ in top) / len(top)
