@@ -30,6 +30,8 @@ def create_app():
 
     from agents.events import EventBus
     from store.store import MemoryStore
+    from starlette.concurrency import run_in_threadpool
+    from backend import live as live_mod
 
     app = FastAPI(title="xC API", version="0.1.0")
     app.state.store = MemoryStore()
@@ -47,7 +49,7 @@ def create_app():
 
     @app.middleware("http")
     async def limits_and_auth(request: Request, call_next):
-        if not authorized(request):
+        if request.url.path != "/health" and not authorized(request):
             return JSONResponse({"detail": "unauthorized"}, status_code=401)
         raw_length = request.headers.get("content-length")
         if raw_length:
@@ -147,7 +149,7 @@ def create_app():
 
     @app.post("/api/v1/resolve")
     async def resolve_route(request: Request):
-        """Resolve an entity through backend.src.engine.resolve with a stable response shape."""
+        """Candidate Qloo brands for a name. The page asks the user to pick when the match is ambiguous."""
         try:
             data = require_object(await request.json())
         except (json.JSONDecodeError, UnicodeDecodeError):
@@ -155,13 +157,15 @@ def create_app():
         query = data.get("query")
         if not isinstance(query, str) or not query.strip():
             raise HTTPException(status_code=422, detail="query is required")
-        from backend.src.engine.resolve import resolve
-        budget = type("Budget", (), {"max_calls": MAX_CALLS, "call_count": 0})()
-        return resolve(None, query, entity_type=data.get("entity_type"), budget=budget)
+        try:
+            cands = await run_in_threadpool(live_mod.candidates, live_mod.Qloo(), query.strip()[:80])
+        except live_mod.QlooError as exc:
+            raise HTTPException(status_code=exc.status or 502, detail=str(exc))
+        return {"candidates": cands}
 
     @app.post("/analyze")
     async def legacy_analyze(request: Request):
-        """Legacy alias removed once the contract path is verified."""
+        """Legacy alias for resolve."""
         return await resolve_route(request)
 
     @app.post("/api/v1/reports", status_code=201)
@@ -170,8 +174,15 @@ def create_app():
             data = require_object(await request.json())
         except (json.JSONDecodeError, UnicodeDecodeError):
             raise HTTPException(status_code=422, detail="invalid JSON")
+        a_name, b_name = data.get("acquirer_brand"), data.get("target_brand")
+        if isinstance(a_name, str) and isinstance(b_name, str) and a_name.strip() and b_name.strip():
+            running = sum(1 for r in live_mod.RUNS.values() if r.status in ("pending", "running"))
+            if running >= MAX_RUNS:
+                raise HTTPException(status_code=429, detail="Several audits are running. Wait a minute and try again.")
+            run = live_mod.create_run(a_name[:80], b_name[:80], data.get("source_entity_id"), data.get("comparison_entity_id"), data.get("preset_id"))
+            return {"id": run.id, "status": "pending"}
         if not isinstance(data.get("query"), str) or not data["query"].strip():
-            raise HTTPException(status_code=422, detail="query is required")
+            raise HTTPException(status_code=422, detail="acquirer_brand and target_brand are required")
         report_id = str(uuid.uuid4())
         app.state.store.create_report({"id": report_id, "status": "pending", "request": data})
         app.state.buses[report_id] = EventBus()
@@ -179,6 +190,9 @@ def create_app():
 
     @app.get("/api/v1/reports/{report_id}")
     async def read_report(report_id: str):
+        run = live_mod.RUNS.get(report_id)
+        if run is not None:
+            return {"id": run.id, "status": run.status, "result": run.result, "error": run.error}
         return get_report(report_id)
 
     @app.post("/api/v1/reports/{report_id}/generate")
@@ -194,6 +208,14 @@ def create_app():
 
     @app.post("/api/v1/reports/{report_id}/generate/stream")
     async def generate_stream(report_id: str, request: Request):
+        run = live_mod.RUNS.get(report_id)
+        if run is not None:
+            try:
+                last_id = max(0, int(request.headers.get("last-event-id") or request.query_params.get("last_event_id") or 0))
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Last-Event-ID must be an integer")
+            return StreamingResponse(live_mod.sse(run, last_id), media_type="text/event-stream",
+                                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
         row = get_report(report_id)
         bus = app.state.buses.setdefault(report_id, EventBus())
         if row.get("status") == "completed" and row.get("report"):
@@ -251,6 +273,12 @@ def create_app():
 
     @app.get("/api/v1/reports/{report_id}/memo.md")
     async def memo_markdown(report_id: str):
+        run = live_mod.RUNS.get(report_id)
+        if run is not None:
+            if not run.result:
+                raise HTTPException(status_code=409, detail="the audit has not finished")
+            return PlainTextResponse(live_mod.memo_markdown(run.result), media_type="text/markdown",
+                                     headers={"Content-Disposition": f'attachment; filename="xc-memo-{report_id[:8]}.md"'})
         row = get_report(report_id)
         report = row.get("report", row)
         result = report.get("result", {}) if isinstance(report, dict) else {}
@@ -258,13 +286,19 @@ def create_app():
 
     @app.get("/api/v1/reports/{report_id}/memo.pdf")
     async def memo_pdf(report_id: str):
+        run = live_mod.RUNS.get(report_id)
+        if run is not None:
+            if not run.result:
+                raise HTTPException(status_code=409, detail="the audit has not finished")
+            from fastapi.responses import Response
+            return Response(live_mod.memo_pdf(live_mod.memo_markdown(run.result)), media_type="application/pdf",
+                            headers={"Content-Disposition": f'attachment; filename="xc-memo-{report_id[:8]}.pdf"'})
         get_report(report_id)
         return JSONResponse({"detail": "PDF rendering is not implemented"}, status_code=501)
 
     @app.get("/health")
     async def health():
-        configured = bool(os.getenv("QLOO_API_KEY", "").strip()) and any(
-            os.getenv(k, "").strip() for k in ("GEMINI_API_KEY", "XC_LLM_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"))
+        configured = bool(os.getenv("QLOO_API_KEY", "").strip())
         return {"status": "ok", "mode": "live" if configured else "fallback", "live": configured, "version": "0.1.0",
                 "budget": {"max_calls": MAX_CALLS, "pacing_ms": PACING_MS}}
 

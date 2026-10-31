@@ -218,7 +218,10 @@
         let res = d.result; if (res && res.$ref) res = await (await fetch("data/" + res.$ref)).json();
         S.report = res; renderReport(res); logLine("fin", t, "Report complete."); break;
       }
-      case "run.finished": logLine("fin", t, `Run ${esc(d.status)}.`); break;
+      case "run.finished":
+        logLine("fin", t, `Run ${esc(d.status)}.`);
+        if (d.status !== "completed" && !S.report) $("#card").innerHTML = `<div class="wrap land"><p class="kicker">The audit stopped</p><h1 style="font-size:34px">This run could not finish.</h1><p class="lead">${esc(d.message || "Qloo did not return enough data.")}</p></div>`;
+        break;
       default: logLine("led", t, "Unrecognised event: " + esc(ev.type));
     }
   }
@@ -244,7 +247,7 @@
   function heroSentence(r) {
     const base = num(r.tam.expansion_usd.base), A = esc(r.acquirer.name), B = esc(r.target.name), v = r.headline.verdict;
     if (base == null) return `The data is not enough to put a dollar figure on pairing ${A} with ${B}.`;
-    const tail = { proceed: "The audiences already overlap, and the main risk is contained.", proceed_with_remediation: "That holds only if the fan communities below are brought along.", high_risk: "The fan reaction could erase most of that value.", insufficient_data: "Treat this as a rough guide." }[v] || "";
+    const tail = { proceed: "The audiences already overlap, and the main risk is contained.", proceed_with_remediation: "That holds only if the fan communities below are brought along.", high_risk: "The expected fan reaction puts a large share of that value at risk.", insufficient_data: "Treat this as a rough guide." }[v] || "";
     return `Pairing ${A} with ${B} is worth an estimated <span class="fig">${usd(base)}</span> a year. ${tail}`;
   }
   function renderReport(r) {
@@ -295,7 +298,7 @@
     if (br.status === "found") {
       const b0 = num(br.friction_before), b1 = num(br.friction_after), red = num(br.friction_reduction_pct);
       h += `<p class="find">Direct fit is weak, so xC searched the categories in between. Walking the audience through these three steps cuts friction from <b>${b0.toFixed(0)}</b> to <b>${b1.toFixed(0)}</b>, a <b>${red.toFixed(0)}%</b> reduction.</p>
-        <div class="path">${br.steps.map((s) => `<div class="step"><div class="num">${s.number}</div><h4>${esc(s.to_category)}</h4><div class="ph2">${esc(s.phase)}</div><p>${esc(s.objective)}</p><div class="chips">${s.entities.map((e) => `<span class="chip">${esc(e.name)}</span>`).join("")}</div><div class="lift">+${num(s.affinity_lift).toFixed(1)} affinity</div></div>`).join("")}</div>
+        <div class="path">${br.steps.map((s) => `<div class="step"><div class="num">${s.number}</div><h4>${esc(s.to_category)}</h4><div class="ph2">${esc(s.phase)}</div><p>${esc(s.objective)}</p><div class="chips">${s.entities.map((e) => `<span class="chip">${esc(e.name)}</span>`).join("")}</div><div class="lift">${num(s.affinity_lift).toFixed(0)} affinity with both audiences</div></div>`).join("")}</div>
         <div class="fric"><span>Friction now <b>${b0.toFixed(0)}</b></span><div class="tr"><i style="left:0;width:${b0}%;background:${X.C.risk};opacity:.25"></i><i style="left:0;width:${b1}%;background:${X.C.both}"></i></div><span>With the bridge <b>${b1.toFixed(0)}</b></span></div>`;
     } else if (br.status === "not_needed") {
       h += `<div class="nob">Direct fit is strong. The two audiences can meet without any help.</div>`;
