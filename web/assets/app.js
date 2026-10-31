@@ -29,7 +29,7 @@
   async function detectLive() {
     if (params.get("mode") === "recorded") return false;
     try {
-      const c = new AbortController(); const t = setTimeout(() => c.abort(), 2500);
+      const c = new AbortController(); const t = setTimeout(() => c.abort(), 12000);
       const r = await fetch(API + "/health", { signal: c.signal }); clearTimeout(t);
       if (!r.ok) return false;
       const j = await r.json(); return j && j.status === "ok" && j.mode === "live";
