@@ -263,8 +263,9 @@ def create_app():
 
     @app.get("/health")
     async def health():
-        configured = any(os.getenv(k) for k in ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "XC_LLM_API_KEY"))
-        return {"status": "ok", "mode": "live" if configured else "fallback", "version": "0.1.0",
+        configured = bool(os.getenv("QLOO_API_KEY", "").strip()) and any(
+            os.getenv(k, "").strip() for k in ("GEMINI_API_KEY", "XC_LLM_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"))
+        return {"status": "ok", "mode": "live" if configured else "fallback", "live": configured, "version": "0.1.0",
                 "budget": {"max_calls": MAX_CALLS, "pacing_ms": PACING_MS}}
 
     return app

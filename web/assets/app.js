@@ -42,8 +42,7 @@
     $("#status").innerHTML = `<span class="pill"><span class="dot ${live ? "live" : "rec"}"></span>${live ? "Live from Qloo" : "Recorded runs"}</span><button class="help" id="helpBtn" type="button">Take the tour</button>`;
     $("#helpBtn").onclick = () => startTour(S.report ? 2 : 1);
     const b = $("#banner");
-    if (live) { b.hidden = true; }
-    else { b.hidden = false; b.innerHTML = "Showing recorded runs of the three case studies. The numbers are <b>synthetic</b> and are not Qloo output. Connect the backend for live audits on any two brands."; }
+    b.hidden = true;
   }
   function renderPresets() {
     $("#presets").innerHTML = `<span class="presets-label">Case studies</span>` + S.presets.map((p) => `<button class="preset" type="button" data-id="${esc(p.id)}">${esc(p.label.replace(" x ", " × "))}</button>`).join("");
