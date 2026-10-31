@@ -34,10 +34,11 @@ def create_app():
     from backend import live as live_mod
 
     app = FastAPI(title="xC API", version="0.1.0")
-    # backend/__init__ mounts the old p8 router on every FastAPI app. It is registered first, so it would
-    # answer /api/v1/resolve, /reports and /generate before the live routes below. Remove it from this app.
-    app.router.routes[:] = [r for r in app.router.routes
-                            if getattr(getattr(r, "endpoint", None), "__module__", "") != "backend.p8_routes"]
+    # backend/__init__ mounts the old p8 router on every FastAPI app, registered first, so it would answer
+    # /api/v1/resolve, /reports and /generate before the live routes below. Everything that exists right now
+    # except FastAPI's own documentation routes came from that mount, so drop it all.
+    _docs = {"/openapi.json", "/docs", "/docs/oauth2-redirect", "/redoc"}
+    app.router.routes[:] = [r for r in app.router.routes if getattr(r, "path", None) in _docs]
     app.state.store = MemoryStore()
     app.state.buses = {}
     app.state.active = set()
@@ -303,7 +304,7 @@ def create_app():
     @app.get("/health")
     async def health():
         configured = bool(os.getenv("QLOO_API_KEY", "").strip())
-        return {"status": "ok", "mode": "live" if configured else "fallback", "live": configured, "version": "0.1.0",
+        return {"status": "ok", "mode": "live" if configured else "fallback", "live": configured, "build": "live-2", "version": "0.1.0",
                 "budget": {"max_calls": MAX_CALLS, "pacing_ms": PACING_MS}}
 
     return app
