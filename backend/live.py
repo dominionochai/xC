@@ -746,6 +746,21 @@ def sse(run: LiveRun, last_id: int = 0, idle_timeout: float = 300.0) -> Iterator
                 return
 
 
+def wait_events(run: LiveRun, after: int = 0, timeout: float = 6.0, limit: int = 200) -> tuple[list[dict], str]:
+    """Long-poll: events after seq `after`, waiting up to `timeout` seconds for the first new one.
+
+    This is what the page uses to follow a run. It needs no streaming, so it behaves the same through
+    every proxy, which is why it replaces SSE as the page's transport (the SSE route is still there).
+    """
+    run.start()
+    with run.cond:
+        if len(run.events) <= after and run.status in ("pending", "running"):
+            run.cond.wait(timeout=timeout)
+    time.sleep(0.2)  # let a burst of events land together
+    with run.cond:
+        return list(run.events[after:after + limit]), run.status
+
+
 def memo_markdown(r: dict) -> str:
     """Plain Markdown memo of a finished report. Every figure is labelled with where it came from."""
     def v(m, fmt="{:.0f}"):

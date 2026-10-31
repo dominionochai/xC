@@ -211,6 +211,14 @@ def create_app():
             raise HTTPException(status_code=429, detail="too many concurrent runs")
         return await bounded_run(report_id)
 
+    @app.get("/api/v1/reports/{report_id}/events")
+    async def report_events(report_id: str, after: int = 0):
+        run = live_mod.RUNS.get(report_id)
+        if run is None:
+            raise HTTPException(status_code=404, detail="report not found")
+        events, status = await run_in_threadpool(live_mod.wait_events, run, max(0, after), 6.0)
+        return {"events": events, "status": status, "next": events[-1]["seq"] if events else max(0, after)}
+
     @app.post("/api/v1/reports/{report_id}/generate/stream")
     async def generate_stream(report_id: str, request: Request):
         run = live_mod.RUNS.get(report_id)

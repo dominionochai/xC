@@ -156,31 +156,18 @@
     if (S.token === my) busy(false);
   }
   async function streamLive(id, my) {
-    let last = 0, tries = 0;
+    // Follow the run by asking the backend what is new. No streaming, so every proxy handles it the same way.
+    let last = 0, fails = 0;
     while (S.token === my) {
-      try {
-        const headers = { Accept: "text/event-stream" }; if (last) headers["Last-Event-ID"] = String(last);
-        const r = await fetch(U(`/api/v1/reports/${id}/generate/stream`), { method: "POST", headers });
-        if (!r.ok) { const j = await r.json().catch(() => null); throw Object.assign(new Error((j && j.detail && (j.detail.message || j.detail)) || "Stream failed (" + r.status + ")"), { status: r.status, detail: j && j.detail }); }
-        const reader = r.body.getReader(), dec = new TextDecoder(); let buf = "";
-        for (;;) {
-          const { value, done } = await reader.read(); if (done) break;
-          buf += dec.decode(value, { stream: true });
-          let i; while ((i = buf.indexOf("\n\n")) >= 0) {
-            const block = buf.slice(0, i); buf = buf.slice(i + 2);
-            const data = block.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trim()).join("");
-            if (!data) continue;
-            const ev = JSON.parse(data); last = ev.seq || last;
-            if (ev.type === "error" && ev.data && ev.data.code === "RUN_NOT_RESUMABLE") { const rec = await api(`/api/v1/reports/${id}`); if (rec.result) await onEvent({ type: "report.completed", seq: last + 1, ts: new Date().toISOString(), data: { result: rec.result } }, my); return; }
-            await onEvent(ev, my); if (ev.type === "run.finished") return;
-          }
-        }
-        return;
-      } catch (err) {
-        if (err.status) throw err;
-        if (++tries > 5) { logLine("err", "", "The stream was lost."); const rec = await api(`/api/v1/reports/${id}`).catch(() => null); if (rec && rec.result) await onEvent({ type: "report.completed", seq: last + 1, ts: new Date().toISOString(), data: { result: rec.result } }, my); return; }
-        await sleep(500 * 2 ** (tries - 1));
+      let j;
+      try { j = await api(`/api/v1/reports/${id}/events?after=${last}`); fails = 0; }
+      catch (err) {
+        if (err.status && ![502, 503, 504].includes(err.status)) throw err;
+        if (++fails > 8) throw err;
+        await sleep(600 * Math.min(fails, 4)); continue;
       }
+      for (const ev of j.events) { last = ev.seq; await onEvent(ev, my); if (ev.type === "run.finished") return; }
+      if (!j.events.length && (j.status === "completed" || j.status === "failed")) return;
     }
   }
 
