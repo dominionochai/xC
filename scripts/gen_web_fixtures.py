@@ -28,9 +28,9 @@ REGION_META = {
 AGE_BUCKETS = ["24_and_younger", "25_to_29", "30_to_34", "35_to_44", "45_to_54", "55_and_older"]
 
 PRESETS = {
-    "porsche-aime-leon-dore": dict(
-        label="Porsche x Aimé Leon Dore", a="Porsche", b="Aimé Leon Dore",
-        description="Automotive heritage meets downtown New York streetwear.",
+    "porsche-kith": dict(
+        label="Porsche x Kith", a="Porsche", b="Kith",
+        description="Automotive heritage meets New York streetwear retail.",
         seed=42, fit=83.0, overlap=0.31, tags=(92, 127, 17),
         shared=["Heritage craftsmanship", "Collector culture", "Design-led luxury", "Weekend driving", "Classic Americana"],
         only_a=["Track performance", "German engineering", "Club events"],

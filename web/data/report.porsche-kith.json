@@ -1,7 +1,7 @@
 {
  "_notice": "SYNTHETIC FIXTURE - NOT QLOO OUTPUT",
  "schema_version": "1.0",
- "run_id": "fixture-porsche-aime-leon-dore",
+ "run_id": "fixture-porsche-kith",
  "mode": "fixture",
  "generated_at": "2026-10-30T09:00:00.000Z",
  "seed": 42,
@@ -11,7 +11,7 @@
   "type": "urn:entity:brand"
  },
  "target": {
-  "name": "Aimé Leon Dore",
+  "name": "Kith",
   "entity_id": "syn-por-b",
   "type": "urn:entity:brand"
  },
@@ -8251,12 +8251,12 @@
    "timestamp": "2026-10-30T09:00:05.000Z",
    "source": "qloo./search",
    "reference": "call:2",
-   "claim": "Aimé Leon Dore resolved to a Qloo brand entity.",
+   "claim": "Kith resolved to a Qloo brand entity.",
    "payload": {
     "ref": "call:2"
    },
    "previous_hash": "ab7ce9b6884813fa7b76beb5ef82de990e9b26912622ee2af0afec066af60832",
-   "current_hash": "b45e9279c1edf2b8c97e7bb5d5dcd2f1833c559d9217b7c2890101c14bdaeff8"
+   "current_hash": "34bee46e91647221ea6fb8b6080f0423cbe236bab4cee53e3a69f9dc5779e4f5"
   },
   {
    "index": 2,
@@ -8267,8 +8267,8 @@
    "payload": {
     "ref": "call:3"
    },
-   "previous_hash": "b45e9279c1edf2b8c97e7bb5d5dcd2f1833c559d9217b7c2890101c14bdaeff8",
-   "current_hash": "88188005c228c91025c19d26a27b5dec2bd36978b9252ffe940abc0065348a33"
+   "previous_hash": "34bee46e91647221ea6fb8b6080f0423cbe236bab4cee53e3a69f9dc5779e4f5",
+   "current_hash": "27e1c4c1e89e47f00f58932dcabba14a69b23902fbe9c75fb792b2b7843a4458"
   },
   {
    "index": 3,
@@ -8279,8 +8279,8 @@
    "payload": {
     "ref": "call:4"
    },
-   "previous_hash": "88188005c228c91025c19d26a27b5dec2bd36978b9252ffe940abc0065348a33",
-   "current_hash": "cf2be99b727a0163094a68048b9591e939a3cb643b61495cb94ada7befbe8f33"
+   "previous_hash": "27e1c4c1e89e47f00f58932dcabba14a69b23902fbe9c75fb792b2b7843a4458",
+   "current_hash": "8a8cb2ad4132dfa46ba1dc58017f51d9fe090bb0119ef4ac592f2189e10c6a56"
   },
   {
    "index": 4,
@@ -8291,8 +8291,8 @@
    "payload": {
     "ref": "call:5"
    },
-   "previous_hash": "cf2be99b727a0163094a68048b9591e939a3cb643b61495cb94ada7befbe8f33",
-   "current_hash": "2b857ba3084772ef5b8b8fa278e2cc7cce5965af54668fc030064933a67e44d6"
+   "previous_hash": "8a8cb2ad4132dfa46ba1dc58017f51d9fe090bb0119ef4ac592f2189e10c6a56",
+   "current_hash": "3c934d7621c2b578fb6f102674d24bb008966b010cc6fc8fc2a632b9134e5ea2"
   },
   {
    "index": 5,
@@ -8303,8 +8303,8 @@
    "payload": {
     "ref": "derive:1"
    },
-   "previous_hash": "2b857ba3084772ef5b8b8fa278e2cc7cce5965af54668fc030064933a67e44d6",
-   "current_hash": "0ff94aadfa34ef30f8e3dae45d1ae3d5c157958a5d8a353501d423773c636c6a"
+   "previous_hash": "3c934d7621c2b578fb6f102674d24bb008966b010cc6fc8fc2a632b9134e5ea2",
+   "current_hash": "b42e0d872e608fdd53a6e4878cbff69a9e40cba0e393d27d42d6474ba76fcba9"
   },
   {
    "index": 6,
@@ -8315,8 +8315,8 @@
    "payload": {
     "ref": "derive:2"
    },
-   "previous_hash": "0ff94aadfa34ef30f8e3dae45d1ae3d5c157958a5d8a353501d423773c636c6a",
-   "current_hash": "d623542b4ad0579e8c4c2bf51088e0383fd258d1d12d644edd0453b56aa8cee0"
+   "previous_hash": "b42e0d872e608fdd53a6e4878cbff69a9e40cba0e393d27d42d6474ba76fcba9",
+   "current_hash": "2bfbefd9ece302a864b16dc87d3277286172bee153db79660b4c50924d7f3d90"
   },
   {
    "index": 7,
@@ -8327,8 +8327,8 @@
    "payload": {
     "ref": "derive:3"
    },
-   "previous_hash": "d623542b4ad0579e8c4c2bf51088e0383fd258d1d12d644edd0453b56aa8cee0",
-   "current_hash": "2107a75a1a05031bcb93377fbf18471a016159ce757b7d6810119dcc67c9a592"
+   "previous_hash": "2bfbefd9ece302a864b16dc87d3277286172bee153db79660b4c50924d7f3d90",
+   "current_hash": "9b516a6a810c7f64f57de5a7c68f9b22729d70aa98e36564cd20f4d5bdb9c43d"
   },
   {
    "index": 8,
@@ -8339,8 +8339,8 @@
    "payload": {
     "ref": "call:6"
    },
-   "previous_hash": "2107a75a1a05031bcb93377fbf18471a016159ce757b7d6810119dcc67c9a592",
-   "current_hash": "d3ba618375404cb78c819d4484be5b1b550de9befb4064fedba94457c3555773"
+   "previous_hash": "9b516a6a810c7f64f57de5a7c68f9b22729d70aa98e36564cd20f4d5bdb9c43d",
+   "current_hash": "f44bc31683f7bc74970b4f683a95b9381c4915e3bc45f8a266b514087f9b62c6"
   },
   {
    "index": 9,
@@ -8351,8 +8351,8 @@
    "payload": {
     "ref": "derive:4"
    },
-   "previous_hash": "d3ba618375404cb78c819d4484be5b1b550de9befb4064fedba94457c3555773",
-   "current_hash": "ad441aee5fc87fd45cc68385d0351555406479208feb9d3e84678e39a4e544ae"
+   "previous_hash": "f44bc31683f7bc74970b4f683a95b9381c4915e3bc45f8a266b514087f9b62c6",
+   "current_hash": "3bfd3972b440c1b6696d863fdb45298def1b0404e464ff254233d904d71f77b5"
   },
   {
    "index": 10,
@@ -8363,8 +8363,8 @@
    "payload": {
     "ref": "assume:1"
    },
-   "previous_hash": "ad441aee5fc87fd45cc68385d0351555406479208feb9d3e84678e39a4e544ae",
-   "current_hash": "8ed2e61d637316b30d4aa844a525d361d4f4bf7b9ae6945c748e03be3af529e1"
+   "previous_hash": "3bfd3972b440c1b6696d863fdb45298def1b0404e464ff254233d904d71f77b5",
+   "current_hash": "8a294efddf90d851ac1937f91b5d4467c59abe47e7ebdbae6d5601a0efda83b2"
   },
   {
    "index": 11,
@@ -8375,8 +8375,8 @@
    "payload": {
     "ref": "assume:2"
    },
-   "previous_hash": "8ed2e61d637316b30d4aa844a525d361d4f4bf7b9ae6945c748e03be3af529e1",
-   "current_hash": "3caff99c6b694108cea0e7090b7558e4f4b0243904ee762fed92653fe9c8045f"
+   "previous_hash": "8a294efddf90d851ac1937f91b5d4467c59abe47e7ebdbae6d5601a0efda83b2",
+   "current_hash": "d69fef094268f231543f15304802c9536c1683cca0502409241264ce7f3ba43e"
   },
   {
    "index": 12,
@@ -8387,8 +8387,8 @@
    "payload": {
     "ref": "derive:5"
    },
-   "previous_hash": "3caff99c6b694108cea0e7090b7558e4f4b0243904ee762fed92653fe9c8045f",
-   "current_hash": "30ccb1407a53df47a1fda5629833228ef0a1955e9ef25b6d52de841de0adf476"
+   "previous_hash": "d69fef094268f231543f15304802c9536c1683cca0502409241264ce7f3ba43e",
+   "current_hash": "60fb1d83d645b8c79e8333b98ceab0770b7933c6fc7894fb7d89eb025bd20739"
   }
  ],
  "evidence_verification": {
@@ -8443,7 +8443,7 @@
   }
  ],
  "memo": {
-  "markdown_path": "/api/v1/reports/fixture-porsche-aime-leon-dore/memo.md",
-  "pdf_path": "/api/v1/reports/fixture-porsche-aime-leon-dore/memo.pdf"
+  "markdown_path": "/api/v1/reports/fixture-porsche-kith/memo.md",
+  "pdf_path": "/api/v1/reports/fixture-porsche-kith/memo.pdf"
  }
 }

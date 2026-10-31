@@ -23,7 +23,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_PAIRS = ["Nike|Adidas", "Porsche|Aimé Leon Dore", "Coachella|Jacquemus", "Lululemon|NFL",
+DEFAULT_PAIRS = ["Nike|Adidas", "Porsche|Kith", "Coachella|Jacquemus", "Lululemon|NFL",
                  "Tesla|Patagonia", "Gucci|McDonald's", "Spotify|Red Bull", "Apple|Netflix"]
 
 

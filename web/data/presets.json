@@ -2,11 +2,11 @@
  "_notice": "SYNTHETIC FIXTURE - NOT QLOO OUTPUT",
  "presets": [
   {
-   "id": "porsche-aime-leon-dore",
-   "label": "Porsche x Aimé Leon Dore",
+   "id": "porsche-kith",
+   "label": "Porsche x Kith",
    "acquirer_brand": "Porsche",
-   "target_brand": "Aimé Leon Dore",
-   "description": "Automotive heritage meets downtown New York streetwear."
+   "target_brand": "Kith",
+   "description": "Automotive heritage meets New York streetwear retail."
   },
   {
    "id": "coachella-jacquemus",
