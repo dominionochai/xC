@@ -1,4 +1,4 @@
-// Edge proxy: the browser talks to /api/xc/*, this function adds the bearer token and forwards to the backend.
+// Edge proxy: the browser calls /api/xc?p=<backend path>; this adds the bearer token and forwards to the backend.
 // The token and the backend address live only in Vercel environment variables, never in the browser.
 export const config = { runtime: "edge" };
 
@@ -10,14 +10,20 @@ export default async function handler(req) {
   if (!base) return json(503, { detail: { message: "The backend is not configured.", missing_configuration: ["XC_API_BASE"] } });
 
   const url = new URL(req.url);
-  const path = url.pathname.replace(/^\/api\/xc/, "") || "/";
+  let path = url.searchParams.get("p");
+  url.searchParams.delete("p");
+  if (path === null) path = url.pathname.replace(/^\/api\/xc\/?/, "");
+  path = "/" + String(path).replace(/^\/+/, "");
+  if (path.includes("..") || path.includes("//")) return json(400, { detail: "bad path" });
+  const query = url.searchParams.toString();
+
   const headers = new Headers(req.headers);
   headers.delete("host");
   headers.delete("cookie");
   if (token) headers.set("authorization", "Bearer " + token);
 
   try {
-    const upstream = await fetch(base + path + url.search, {
+    const upstream = await fetch(base + path + (query ? "?" + query : ""), {
       method: req.method,
       headers,
       body: req.method === "GET" || req.method === "HEAD" ? undefined : req.body,

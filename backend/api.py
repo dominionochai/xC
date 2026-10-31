@@ -34,6 +34,10 @@ def create_app():
     from backend import live as live_mod
 
     app = FastAPI(title="xC API", version="0.1.0")
+    # backend/__init__ mounts the old p8 router on every FastAPI app. It is registered first, so it would
+    # answer /api/v1/resolve, /reports and /generate before the live routes below. Remove it from this app.
+    app.router.routes[:] = [r for r in app.router.routes
+                            if getattr(getattr(r, "endpoint", None), "__module__", "") != "backend.p8_routes"]
     app.state.store = MemoryStore()
     app.state.buses = {}
     app.state.active = set()

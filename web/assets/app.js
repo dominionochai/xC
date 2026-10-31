@@ -4,6 +4,7 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const API = "/api/xc";
+  const U = (path) => API + "?p=" + encodeURIComponent(String(path).replace(/^\/+/, "")).replace(/%2F/g, "/");
   const PHASES = ["NORMALIZATION", "GRAPH_QUERYING", "BRIDGE_DISCOVERY", "ADVERSARIAL_AUDIT", "SYNTHESIS"];
   const PHASE_NAME = { NORMALIZATION: "Match the brands", GRAPH_QUERYING: "Read the taste graph", BRIDGE_DISCOVERY: "Find a bridge", ADVERSARIAL_AUDIT: "Simulate the backlash", SYNTHESIS: "Price the deal" };
   const VERDICT = { proceed: ["Proceed", "good"], proceed_with_remediation: ["Proceed with remediation", "warn"], high_risk: ["High risk", "risk"], insufficient_data: ["Insufficient data", ""] };
@@ -30,7 +31,7 @@
     if (params.get("mode") === "recorded") return false;
     try {
       const c = new AbortController(); const t = setTimeout(() => c.abort(), 12000);
-      const r = await fetch(API + "/health", { signal: c.signal }); clearTimeout(t);
+      const r = await fetch(U("/health"), { signal: c.signal }); clearTimeout(t);
       if (!r.ok) return false;
       const j = await r.json(); return j && j.status === "ok" && j.mode === "live";
     } catch (e) { return false; }
@@ -116,7 +117,7 @@
 
   /* ---------------- live path ---------------- */
   async function api(path, opt = {}) {
-    const r = await fetch(API + path, { headers: { "Content-Type": "application/json", Accept: "application/json" }, ...opt });
+    const r = await fetch(U(path), { headers: { "Content-Type": "application/json", Accept: "application/json" }, ...opt });
     const body = await r.json().catch(() => null);
     if (!r.ok) { const d = body && body.detail; throw Object.assign(new Error(typeof d === "string" ? d : (d && d.message) || "Request failed (" + r.status + ")"), { status: r.status, detail: d }); }
     return body;
@@ -159,7 +160,7 @@
     while (S.token === my) {
       try {
         const headers = { Accept: "text/event-stream" }; if (last) headers["Last-Event-ID"] = String(last);
-        const r = await fetch(`${API}/api/v1/reports/${id}/generate/stream`, { method: "POST", headers });
+        const r = await fetch(U(`/api/v1/reports/${id}/generate/stream`), { method: "POST", headers });
         if (!r.ok) { const j = await r.json().catch(() => null); throw Object.assign(new Error((j && j.detail && (j.detail.message || j.detail)) || "Stream failed (" + r.status + ")"), { status: r.status, detail: j && j.detail }); }
         const reader = r.body.getReader(), dec = new TextDecoder(); let buf = "";
         for (;;) {
@@ -337,7 +338,7 @@
     $$(".ref").forEach((b) => (b.onclick = () => { const row = $("#ev-" + b.dataset.ev); if (!row) return; row.scrollIntoView({ behavior: "smooth", block: "center" }); row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash"); }));
     const row = $("#dlrow"), fixture = r.mode === "fixture";
     if (fixture) { row.innerHTML = `<button class="btn" id="mdBtn" type="button">Download memo (Markdown)</button><button class="btn ghost" id="prBtn" type="button">Save as PDF</button>`; $("#mdBtn").onclick = () => download(`xc-memo-${r.run_id}.md`, memo(r)); $("#prBtn").onclick = () => window.print(); }
-    else { row.innerHTML = `<a class="btn" href="${API}${r.memo.pdf_path}">Download memo (PDF)</a><a class="btn ghost" href="${API}${r.memo.markdown_path}">Download Markdown</a>`; }
+    else { row.innerHTML = `<a class="btn" href="${U(r.memo.pdf_path)}">Download memo (PDF)</a><a class="btn ghost" href="${U(r.memo.markdown_path)}">Download Markdown</a>`; }
   }
   function download(name, text) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/markdown" })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
   function memo(r) {
