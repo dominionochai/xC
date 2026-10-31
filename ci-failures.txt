@@ -1,0 +1,4 @@
+ERROR tests/test_culture_engine.py
+ERROR tests/test_culture_engine.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+12 warnings, 1 error in 0.36s
